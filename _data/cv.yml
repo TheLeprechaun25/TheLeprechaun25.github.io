@@ -27,12 +27,6 @@
       institution: University of the Basque Country (UPV/EHU), School of Engineering, Bilbao, Spain
       year: 2018
 
-- title: Reviewer
-  type: time_table
-  contents:
-    - title: IEEE TEvC; ICML; IJCAI; PPSN
-      year: 2020-Now
-
 - title: Competitions and Achievements
   type: time_table
   contents:
