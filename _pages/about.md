@@ -20,6 +20,6 @@ I’m **Andoni Irazusta Garmendia**, a researcher and engineer working on **deep
 
 A large part of my work uses **combinatorial optimization problems (COPs)** as a challenging testbed for these ideas. In that context, I develop end-to-end approaches that combine **representation learning**, **search and decision-making**, and **reinforcement learning**, and I build the full pipeline from **model architectures** and **training objectives** to **evaluation and large-scale experimentation**.
 
-If you’d like a quick overview, check out my **Projects** and **Publications** pages, or reach out via email.
+If you’d like a quick overview, check out my **Blog** and **Publications** pages, or reach out via email.
 
 Outside research, I like running and experimenting with performance training.
