@@ -44,12 +44,12 @@
   type: time_table
   contents:
     - title: NeurIPS CityLearn Competition
-      year: Sep 2023 – Dec 2023
+      year: 2023
       description:
         - Designed a multi-objective control framework for energy management in buildings (HVAC, hot water, batteries).
         - "Achievement: 1st place out of 712 participants."
     - title: Kaggle M5 Forecasting Competition
-      year: Apr 2020 – Jun 2020
+      year: 2020
       description:
         - Forecasted Walmart sales with a hybrid time-series model combining LightGBM, ARIMA, and LSTM.
         - "Achievement: 22nd place out of ~2,000 participants."
