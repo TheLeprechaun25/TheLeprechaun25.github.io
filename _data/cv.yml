@@ -30,6 +30,11 @@
 - title: Competitions and Achievements
   type: time_table
   contents:
+    - title: Flextrack Challenge
+      year: 2025
+      description:
+        - Built ML models to detect demand response events and quantify impact via counterfactual-style baselines.
+        - "Achievement: 8th place out of 650 participants."
     - title: NeurIPS CityLearn Competition
       year: 2023
       description:
@@ -40,11 +45,6 @@
       description:
         - Forecasted Walmart sales with a hybrid time-series model combining LightGBM, ARIMA, and LSTM.
         - "Achievement: 22nd place out of ~2,000 participants."
-    - title: Flextrack Challenge
-      year: 2025
-      description:
-        - Built ML models to detect demand response events and quantify impact via counterfactual-style baselines.
-        - "Achievement: 8th place out of 650 participants."
 
 - title: Grants
   type: time_table
