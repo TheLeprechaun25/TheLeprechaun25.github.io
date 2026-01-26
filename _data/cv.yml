@@ -17,7 +17,7 @@
       description:
         - title: Thesis: Exploring Neural Combinatorial Optimization: Current State and Future Perspectives
           contents:
-            - Supervisors: Alexander Mendiburu, Josu Ceberio, Quentin Cappart
+            - tttle: Supervisors: Alexander Mendiburu, Josu Ceberio
 
     - title: M.S. in Computational Engineering (Minor in Artificial Intelligence)
       institution: Illinois Institute of Technology, Chicago, USA
