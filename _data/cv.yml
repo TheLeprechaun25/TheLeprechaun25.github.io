@@ -11,34 +11,31 @@
 - title: Education
   type: time_table
   contents:
-    - title: Ph.D. in Deep Learning and Combinatorial Optimization
+    - title: Ph.D.
       institution: University of the Basque Country (UPV/EHU), Donostia–San Sebastián, Spain
       year: 2024
       description:
-        - title: Thesis: Exploring Neural Combinatorial Optimization: Current State and Future Perspectives
+        - title: "Thesis: Exploring Neural Combinatorial Optimization: Current State and Future Perspectives"
           contents:
-            - title: Supervisors: Alexander Mendiburu, Josu Ceberio
+            - title: "Supervisors: Alexander Mendiburu, Josu Ceberio"
 
     - title: M.S. in Computational Engineering (Minor in Artificial Intelligence)
       institution: Illinois Institute of Technology, Chicago, USA
       year: 2020
 
     - title: M.S. in Industrial Engineering
-      institution: University of the Basque Country (UPV/EHU), Bilbao, Spain
+      institution: University of the Basque Country (UPV/EHU), School of Engineering, Bilbao, Spain
       year: 2019
 
     - title: B.S. in Industrial Engineering (Minor in Robotics and Control)
-      institution: University of the Basque Country (UPV/EHU), Bilbao, Spain
+      institution: University of the Basque Country (UPV/EHU), School of Engineering, Bilbao, Spain
       year: 2018
 
-- title: Academic Service
+- title: Reviewer
   type: time_table
   contents:
-    - title: Session Chair, IJCAI (Search Track)
-      year: 2024
-    - title: Reviewer
-      institution: IEEE Transactions on Evolutionary Computation (TEvC); NeurIPS; ICLR; ICML; IJCAI; PPSN
-      year: Ongoing
+    - title: IEEE TEvC; ICML; IJCAI; PPSN
+      year: 2020-Now
 
 - title: Competitions and Achievements
   type: time_table
