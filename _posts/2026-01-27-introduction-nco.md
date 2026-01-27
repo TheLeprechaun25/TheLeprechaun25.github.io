@@ -1,22 +1,30 @@
 ---
 layout: distill
-title: Introduction to Neural Combinatorial Optimization
-description: an example with the Travelling Salesperson Problem
+title: Introduction to Neural Combinatorial Optimization (NCO)
+description: A visual introduction to NCO via the Traveling Salesperson Problem—constructive decoders and neural improvement.
 giscus_comments: true
 date: 2026-01-27
+
+authors:
+  - name: Andoni Irazusta Garmendia
+    url: "https://theleprechaun.github.io/"
+    affiliations:
+      name: University of the Basque Country (UPV/EHU)
 
 bibliography: 2026-01-27-introduction-nco.bib
 
 toc:
-  - name: Why Neural Combinatorial Optimization
+  - name: Combinatorial Optimization
   - name: The Traveling Salesperson Problem
+  - name: Why Neural Combinatorial Optimization
   - name: Two families of neural solvers
     subsections:
       - name: Neural constructive models
       - name: Neural improvement models
   - name: Training signals
   - name: Inference under a compute budget
-  - name: When to use which approach
+  - name: Pitfalls and evaluation
+  - name: Where the field is going
   - name: References
 
 _styles: >
@@ -67,6 +75,9 @@ _styles: >
     background: rgba(0,0,0,.25);
     color: rgba(255,255,255,.92);
   }
+  .anim-toolbar input[type="range"]{
+    width: 150px;
+  }
   .anim-toolbar .pill{
     padding: 6px 10px;
     border-radius: 999px;
@@ -88,27 +99,26 @@ _styles: >
   }
 ---
 
-## Why Neural Combinatorial Optimization
+## Combinatorial Optimization
 
-Combinatorial optimization sits underneath a huge range of real systems: routing and logistics, scheduling, allocation, graph partitioning, and many more. Classical solvers rely on decades of algorithmic craftsmanship—greedy heuristics, local search, branch-and-bound, cutting planes—often tuned to specific instance structures.
+Combinatorial optimization (CO) sits underneath a huge range of real systems: routing and logistics, scheduling, allocation, packing, and graph problems such as partitioning or cuts. What makes these problems challenging is not that the objective is mysterious, but that the number of feasible solutions typically grows **combinatorially** with instance size.
 
-**Neural Combinatorial Optimization (NCO)** asks a different question: can we learn a solver from data and interaction, so that the *algorithm itself* adapts to a problem family? In the best case, a learned solver does more than memorize training instances: it learns **search priors**, **representations**, and **decision rules** that generalize across instances and scale with compute at inference time.
+Classical solvers and heuristics are the result of decades of human algorithmic effort. They are not “generic black boxes”: they encode substantial **problem structure** and **domain knowledge**—which neighborhoods to search, which relaxations to solve, which cuts to add, which branching rules work, which invariances matter, which parameters to tune. This accumulated craft is a major reason why mature optimization toolchains remain extremely strong in practice.
 
-The field took off once sequence models and attention made it practical to map *sets/graphs → permutations/structures*, starting with pointer-network style decoders for routing problems <d-cite key="vinyals2015pointer"></d-cite> and then attention-based constructive solvers for TSP <d-cite key="bello2016neural,kool2019attention"></d-cite>. Since then, NCO has broadened to include non-autoregressive models (heatmaps, diffusion) <d-cite key="joshi2019efficient,sun2023difusco"></d-cite>, multi-start decoding like POMO <d-cite key="kwon2020pomo"></d-cite>, and—crucially for real deployment—**neural improvement** methods that explicitly learn local moves under a budget <d-cite key="chen2021learning"></d-cite>.
+Surveys provide a broad picture of how machine learning has entered this landscape, and how CO problems are used as testbeds for learning-based decision-making <d-cite key="bengio2021machine,mazyavkina2021reinforcement"></d-cite>.
 
 <div class="note">
-<strong>Two practical regimes.</strong><br/>
-(1) You want a strong <em>first</em> solution quickly (constructive).<br/>
-(2) You want the best solution you can reach within a fixed compute/time budget (improvement / search).
+<strong>Key tension.</strong><br/>
+Human-designed solvers can be extraordinarily effective, but adapting them to new distributions, new constraints, or new computational regimes often requires additional expert effort. This motivates learning-based approaches that can <em>learn</em> the rules of good search from data and interaction.
 </div>
-
-We will use the Traveling Salesperson Problem (TSP) as a running example because it is simple to state, hard to solve exactly at scale, and rich enough to expose most of the key design choices.
 
 ---
 
 ## The Traveling Salesperson Problem
 
-Given cities with coordinates \(x_1,\dots,x_N \in \mathbb{R}^2\), the symmetric Euclidean TSP asks for a permutation \(\pi\) that minimizes the tour length:
+We will use the Traveling Salesperson Problem (TSP) as a running example because it is simple to state, widely studied, and still rich enough to expose most of the core design decisions in NCO.
+
+Given cities with coordinates \(x_1,\dots,x_N \in \mathbb{R}^2\), the symmetric Euclidean TSP asks for a permutation \(\pi\) that minimizes tour length:
 
 $$
 \min_{\pi \in S_N}\; C(\pi)
@@ -117,74 +127,285 @@ $$
 \qquad \pi_{N+1} := \pi_1.
 $$
 
-Even though the objective is “just” a sum of distances, the search space is enormous: \((N-1)!\) tours (fixing a start city). This is why most scalable solvers are **heuristics** that trade optimality for speed, and why the *budgeted* setting (what can you do in 50ms, 1s, 10s?) matters so much.
+A useful view is “graph + distances”: each city is a node, and the cost of connecting cities \(i\) and \(j\) is a distance \(d_{ij}\). In Euclidean TSP, \(d_{ij} = \|x_i-x_j\|_2\); in more general variants, \(d_{ij}\) can come from travel time, asymmetric costs, or constraints.
+
+### Animation: cities and distances
+
+The animation below shows a random TSP instance. Hover a city to reveal its distances to others; use the slider to control how many “short” edges are drawn (a crude view of local structure).
+
+<div class="l-page">
+  <div class="anim-wrap" id="tspAnimWrap">
+    <div class="anim-toolbar">
+      <button id="tspNew">New instance</button>
+      <span class="pill">Hover cities to see distances</span>
+      <span class="pill">Edge threshold</span>
+      <input id="tspThresh" type="range" min="0" max="100" value="38" />
+      <span class="pill" id="tspInfo">Ready.</span>
+    </div>
+    <canvas class="anim-canvas" id="tspCanvas"></canvas>
+  </div>
+</div>
+
+<script>
+(function(){
+  function mulberry32(a){
+    return function(){
+      var t = a += 0x6D2B79F5;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    }
+  }
+  function dist(a,b){
+    const dx=a[0]-b[0], dy=a[1]-b[1];
+    return Math.hypot(dx,dy);
+  }
+
+  const canvas = document.getElementById("tspCanvas");
+  const ctx = canvas.getContext("2d");
+  const btnNew = document.getElementById("tspNew");
+  const slider = document.getElementById("tspThresh");
+  const info = document.getElementById("tspInfo");
+
+  let rng = mulberry32(20260127);
+  let pts = [];
+  let hoverIdx = -1;
+
+  function resize(){
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = Math.floor(rect.width * dpr);
+    canvas.height = Math.floor(rect.height * dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    draw();
+  }
+  window.addEventListener("resize", resize);
+
+  function newInstance(n=36){
+    pts=[];
+    for(let i=0;i<n;i++){
+      const x = 0.08 + 0.84 * rng();
+      const y = 0.08 + 0.84 * rng();
+      pts.push([x,y]);
+    }
+    hoverIdx = -1;
+    info.textContent = "New instance.";
+    draw();
+  }
+
+  function pickHover(mx, my){
+    const rect = canvas.getBoundingClientRect();
+    const W = rect.width, H = rect.height;
+    const pad = 26;
+    function X(x){ return pad + x*(W-2*pad); }
+    function Y(y){ return pad + y*(H-2*pad); }
+    let best=-1, bestd=1e18;
+    for(let i=0;i<pts.length;i++){
+      const dx = X(pts[i][0]) - mx;
+      const dy = Y(pts[i][1]) - my;
+      const d = Math.hypot(dx,dy);
+      if(d < bestd){ bestd = d; best = i; }
+    }
+    return (bestd <= 14) ? best : -1;
+  }
+
+  canvas.addEventListener("mousemove", (e)=>{
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    const idx = pickHover(mx, my);
+    if(idx !== hoverIdx){
+      hoverIdx = idx;
+      if(hoverIdx>=0) info.textContent = `Selected city ${hoverIdx+1}/${pts.length}.`;
+      else info.textContent = "Hover cities to see distances.";
+      draw();
+    }
+  });
+  canvas.addEventListener("mouseleave", ()=>{
+    hoverIdx = -1;
+    info.textContent = "Hover cities to see distances.";
+    draw();
+  });
+
+  function draw(){
+    const rect = canvas.getBoundingClientRect();
+    const W = rect.width, H = rect.height;
+    ctx.clearRect(0,0,W,H);
+
+    const dark = document.documentElement.getAttribute("data-theme")==="dark";
+    const edge = dark ? "rgba(240,240,240,.20)" : "rgba(0,0,0,.10)";
+    const edgeStrong = dark ? "rgba(240,240,240,.55)" : "rgba(0,0,0,.28)";
+    const nodeFill = dark ? "rgba(230,230,230,.92)" : "rgba(30,30,30,.88)";
+    const nodeStroke = dark ? "rgba(255,255,255,.25)" : "rgba(0,0,0,.12)";
+    const label = dark ? "rgba(255,255,255,.70)" : "rgba(0,0,0,.60)";
+    const accent = getComputedStyle(document.documentElement).getPropertyValue("--global-theme-color").trim() || (dark ? "#00C060" : "#00A550");
+
+    const pad = 26;
+    function X(x){ return pad + x*(W-2*pad); }
+    function Y(y){ return pad + y*(H-2*pad); }
+
+    // compute threshold based on slider percentile of pairwise distances
+    const ds = [];
+    for(let i=0;i<pts.length;i++){
+      for(let j=i+1;j<pts.length;j++){
+        ds.push(dist(pts[i], pts[j]));
+      }
+    }
+    ds.sort((a,b)=>a-b);
+    const q = Math.max(0, Math.min(100, +slider.value)) / 100.0;
+    const thr = ds[Math.floor(q * (ds.length-1))];
+
+    // draw "local" edges under threshold (gives intuition about local geometry)
+    ctx.lineWidth = 1.2;
+    for(let i=0;i<pts.length;i++){
+      for(let j=i+1;j<pts.length;j++){
+        const d = dist(pts[i], pts[j]);
+        if(d > thr) continue;
+        ctx.strokeStyle = edge;
+        ctx.beginPath();
+        ctx.moveTo(X(pts[i][0]), Y(pts[i][1]));
+        ctx.lineTo(X(pts[j][0]), Y(pts[j][1]));
+        ctx.stroke();
+      }
+    }
+
+    // if hovering, draw distances from the selected city with stronger opacity
+    if(hoverIdx >= 0){
+      ctx.lineWidth = 2.6;
+      for(let j=0;j<pts.length;j++){
+        if(j===hoverIdx) continue;
+        ctx.strokeStyle = edgeStrong;
+        ctx.beginPath();
+        ctx.moveTo(X(pts[hoverIdx][0]), Y(pts[hoverIdx][1]));
+        ctx.lineTo(X(pts[j][0]), Y(pts[j][1]));
+        ctx.stroke();
+      }
+    }
+
+    // nodes
+    for(let i=0;i<pts.length;i++){
+      const px = X(pts[i][0]), py = Y(pts[i][1]);
+      const r = (i===hoverIdx) ? 7.5 : 5.2;
+
+      ctx.beginPath();
+      ctx.arc(px,py,r,0,Math.PI*2);
+      ctx.fillStyle = nodeFill;
+      ctx.fill();
+      ctx.lineWidth = 1.2;
+      ctx.strokeStyle = nodeStroke;
+      ctx.stroke();
+
+      if(i===hoverIdx){
+        ctx.beginPath();
+        ctx.arc(px,py,r+4.5,0,Math.PI*2);
+        ctx.strokeStyle = accent;
+        ctx.lineWidth = 3;
+        ctx.stroke();
+      }
+    }
+
+    // small legend text
+    ctx.fillStyle = label;
+    ctx.font = "12px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
+    ctx.fillText(`Edge threshold ≈ ${(thr).toFixed(3)} (quantile ${Math.round(q*100)}%)`, 18, H-14);
+  }
+
+  slider.addEventListener("input", draw);
+  btnNew.addEventListener("click", ()=>{
+    rng = mulberry32((Math.random()*1e9)>>>0);
+    newInstance(36);
+  });
+
+  newInstance(36);
+  resize();
+})();
+</script>
+
+---
+
+## Why Neural Combinatorial Optimization
+
+**Neural Combinatorial Optimization (NCO)** adopts a learning perspective on solver design: instead of hand-coding every heuristic rule, we ask whether a model can **learn search strategies** from data and interaction.
+
+Concretely, an NCO method typically learns one or more of the following:
+
+- **Representations** that make the relevant structure easy to reason about (sets, graphs, constraints).
+- **Decision rules** that choose actions during construction or improvement (which city next, which local move, which edge to cut).
+- **Search priors** that bias exploration toward promising regions of the solution space.
+
+This is not meant to “replace” classical optimization. In practice, many successful NCO systems reuse classical ingredients—feasibility checks, neighborhood operators, decoding schemes—and learn the parts where *good choices are hard to specify* but easy to evaluate with data.
+
+Historically, NCO accelerated once sequence models and attention made it practical to map **sets/graphs → permutations/structures**, starting with pointer-network style decoders for routing problems <d-cite key="vinyals2015pointer"></d-cite> and then attention-based constructive solvers for TSP <d-cite key="bello2016neural,kool2019attention"></d-cite>. Since then, NCO has expanded to non-autoregressive approaches (heatmaps, diffusion) <d-cite key="joshi2019efficient,sun2023difusco"></d-cite> and to methods that explicitly learn *iterative refinement* (learned local search / neural improvement) <d-cite key="chen2021learning"></d-cite>.
+
+<div class="note">
+<strong>Construct vs improve is a design choice, not a verdict.</strong><br/>
+Constructive models output a full solution in one decoding run (often with optional restarts). Improvement models start from a solution and apply local modifications over time. Which is preferable depends on the instance family, the compute budget, and what “good” looks like in deployment.
+</div>
 
 ---
 
 ## Two families of neural solvers
 
-At a high level, NCO methods for routing often fall into two families:
+At a high level, many NCO solvers for routing can be grouped into:
 
-1. **Neural constructive models**: output a full tour in one decoding run.
-2. **Neural improvement models**: start from a tour and iteratively apply local modifications.
+1. **Neural constructive models**: produce a tour in a single decoding run (sometimes with multiple starts).
+2. **Neural improvement models**: iteratively refine a tour using local moves.
 
-They can be combined, but it helps to understand their inductive biases separately.
+They can be combined (construct → improve), but it helps to understand the two inductive biases separately.
 
 ### Neural constructive models
 
 A constructive policy builds a solution one decision at a time. The canonical example is an attention-based encoder–decoder:
 
-- **Encoder**: maps the set of cities to embeddings (often with self-attention).
-- **Decoder**: autoregressively selects the next city conditioned on the partial tour and visited mask.
+- **Encoder**: maps the set of cities to embeddings (often using self-attention).
+- **Decoder**: autoregressively selects the next city conditioned on the partial tour and a visited mask.
 
 In the attention model for TSP <d-cite key="kool2019attention"></d-cite>, the decoder defines a distribution:
 $$
 p_\theta(\pi) = \prod_{t=1}^{N} p_\theta(\pi_t \mid \pi_{<t}, x),
 $$
-and you decode either greedily, by sampling, or with beam search / multi-start.
+and at inference you decode greedily, by sampling, or via structured search (beam, multi-start).
 
-Training is typically reinforcement learning (REINFORCE) with a baseline:
+A common training route is policy gradients (REINFORCE) with a baseline:
 $$
 \nabla_\theta \mathbb{E}_{\pi \sim p_\theta(\cdot|x)}[C(\pi)]
 =
-\mathbb{E}\left[(C(\pi)-b(x)) \nabla_\theta \log p_\theta(\pi|x)\right].
+\mathbb{E}\left[(C(\pi)-b(x)) \nabla_\theta \log p_\theta(\pi|x)\right],
 $$
-Practical upgrades include multi-start decoding and instance-dependent baselines (e.g., POMO) <d-cite key="kwon2020pomo"></d-cite>.
+with practical upgrades like multi-start decoding and instance-dependent baselines (e.g., POMO) <d-cite key="kwon2020pomo"></d-cite>.
 
-**Intuition.** Constructive models learn a *prior over good tours* and can be extremely fast at producing decent solutions. But they are often optimized for the “first-shot” output; getting from “good” to “excellent” under a budget may require explicit search.
+**Typical strength.** Constructive models are excellent at amortizing: after training, a single forward pass can output a good tour quickly. Additional compute is usually spent on *restarts* (sample more tours, keep the best) rather than deeper reasoning within one run.
 
 ---
 
 ### Neural improvement models
 
-Neural improvement (sometimes framed as learned local search) treats optimization as a sequential decision process:
+Neural improvement (learned local search) treats optimization as a sequential decision process:
 
 - **State**: current solution (tour) + instance (cities) + optional history.
-- **Action**: a local move (e.g., 2-opt swap).
+- **Action**: a local move (e.g., a 2-opt swap).
 - **Transition**: apply the move to get a new tour.
 - **Reward**: improvement in tour cost (dense) or best-so-far improvement (sparse).
 
-A classic local move for TSP is **2-opt**: pick two edges \((i,i+1)\) and \((j,j+1)\) and reverse the segment between them, removing crossings and often reducing cost. The neighborhood size is \(O(N^2)\), so selecting moves intelligently matters.
+A classic local operator is **2-opt**: pick two tour edges \((i,i+1)\) and \((j,j+1)\), remove them, and reconnect in the other way (equivalently reverse the segment between them). This removes crossings and frequently reduces cost. The neighborhood size is \(O(N^2)\), so a learned policy can matter simply by prioritizing which moves to examine.
 
 Neural improvement policies can be trained by:
-- **Imitation**: predict the best move given a teacher (exact or heuristic).
-- **RL**: optimize expected improvement over a rollout budget.
-- **Hybrid**: imitation warm-start + RL fine-tuning.
+- **Imitation**: predict the best move given a teacher (exact for small \(N\), heuristic for larger \(N\)).
+- **RL**: maximize expected improvement over rollouts.
+- **Hybrid**: imitate for stability, fine-tune with RL for budget-aligned behavior.
 
-This family connects to “learning to search” and learned heuristics more broadly <d-cite key="chen2021learning,mazyavkina2021reinforcement,bengio2021machine"></d-cite>.
+This connects to broader “learning to search” approaches in CO <d-cite key="chen2021learning,mazyavkina2021reinforcement,bengio2021machine"></d-cite>.
 
-**Intuition.** Improvement models are naturally **anytime**: with more steps, they (usually) keep getting better. This aligns well with real constraints where you can spend a fixed inference budget.
+**Typical strength.** Improvement models naturally define an anytime procedure: you can stop at any step, keep the best-so-far tour, and trade compute for quality.
 
 ---
 
 ## Two animations: construct vs improve
 
-The demos below illustrate the *algorithmic shape* of the two families:
+The demo below contrasts the *procedural shape* of the two families:
 
-- **Constructive**: pick next node sequentially (a stand-in for an autoregressive policy).
-- **Improvement**: start from a tour and apply 2-opt improvements.
-
-These are illustrative animations (not running your trained network), but the compute/budget behavior mirrors what you typically see in practice.
+- **Constructive**: pick the next city sequentially (here: an illustrative nearest-neighbor-like policy).
+- **Improvement**: start from a heuristic tour and apply greedy 2-opt steps.
 
 <div class="l-page">
   <div class="anim-wrap" id="ncoAnimWrap">
@@ -250,8 +471,7 @@ These are illustrative animations (not running your trained network), but the co
     for(let i=0;i<n;i++){
       const a=tour[i], b=tour[(i+1)%n];
       for(let j=i+2;j<n;j++){
-        // avoid adjacent + full wrap
-        if(i===0 && j===n-1) continue;
+        if(i===0 && j===n-1) continue; // avoid full reversal
         const c=tour[j], d=tour[(j+1)%n];
         const before = dist(pts[a], pts[b]) + dist(pts[c], pts[d]);
         const after  = dist(pts[a], pts[c]) + dist(pts[b], pts[d]);
@@ -265,7 +485,6 @@ These are illustrative animations (not running your trained network), but the co
   }
   function applyTwoOpt(tour, i, j){
     // reverse segment (i+1..j)
-    const n=tour.length;
     const out=tour.slice();
     let l=i+1, r=j;
     while(l<r){
@@ -310,10 +529,9 @@ These are illustrative animations (not running your trained network), but the co
   }
   window.addEventListener("resize", resize);
 
-  function makeInstance(n=32){
+  function makeInstance(n=34){
     pts=[];
     for(let i=0;i<n;i++){
-      // nice margin, deterministic seed
       const x = 0.08 + 0.84 * rng();
       const y = 0.08 + 0.84 * rng();
       pts.push([x,y]);
@@ -321,20 +539,17 @@ These are illustrative animations (not running your trained network), but the co
   }
 
   function initConstruct(){
-    tour = [];
     partial = [0];
     visited = new Array(pts.length).fill(false);
     visited[0]=true;
     step = 0;
     lastMove = null;
-    pillInfo.textContent = "Constructive: step-by-step selection.";
+    pillInfo.textContent = "Constructive: sequential selection (illustrative).";
     updatePills();
   }
 
   function initImprove(){
-    tour = nearestNeighborTour(pts, 0); // start from a quick heuristic
-    partial = [];
-    visited = [];
+    tour = nearestNeighborTour(pts, 0);
     step = 0;
     lastMove = null;
     pillInfo.textContent = "Improvement: greedy 2-opt steps.";
@@ -367,12 +582,10 @@ These are illustrative animations (not running your trained network), but the co
 
   function updatePills(){
     if(mode==="construct"){
-      const cur = partial.length >= 2 ? tourCost(pts, partial) : 0;
-      pillCost.textContent = partial.length>=2 ? ("Partial cost: " + cur.toFixed(2)) : "Partial cost: –";
+      pillCost.textContent = partial.length>=2 ? ("Partial cost: " + tourCost(pts, partial).toFixed(2)) : "Partial cost: –";
       pillStep.textContent = "Step: " + step + "/" + (pts.length-1);
     }else{
-      const c = tourCost(pts, tour);
-      pillCost.textContent = "Cost: " + c.toFixed(2);
+      pillCost.textContent = "Cost: " + tourCost(pts, tour).toFixed(2);
       pillStep.textContent = "Step: " + step;
     }
   }
@@ -380,10 +593,8 @@ These are illustrative animations (not running your trained network), but the co
   function stepOnce(){
     if(mode==="construct"){
       if(partial.length === pts.length){
-        // close tour
         pillInfo.textContent = "Constructive: tour completed.";
-        updatePills();
-        draw();
+        updatePills(); draw();
         return false;
       }
       const last = partial[partial.length-1];
@@ -397,27 +608,21 @@ These are illustrative animations (not running your trained network), but the co
       visited[best]=true;
       step++;
       lastMove = {type:"pick", a:last, b:best};
-      pillInfo.textContent = "Constructive: chose next city (illustrative policy).";
-      updatePills();
-      draw();
+      pillInfo.textContent = "Constructive: picked next city.";
+      updatePills(); draw();
       return true;
     }else{
       const mv = twoOptBestMove(pts, tour);
       if(mv.i<0){
-        pillInfo.textContent = "Improvement: local optimum under 2-opt.";
-        updatePills();
-        draw();
+        pillInfo.textContent = "Improvement: reached a 2-opt local optimum.";
+        updatePills(); draw();
         return false;
       }
-      const oldCost = tourCost(pts, tour);
-      const newTour = applyTwoOpt(tour, mv.i, mv.j);
-      const newCost = tourCost(pts, newTour);
-      lastMove = {type:"2opt", i:mv.i, j:mv.j, oldCost, newCost};
-      tour = newTour;
+      lastMove = {type:"2opt", i:mv.i, j:mv.j};
+      tour = applyTwoOpt(tour, mv.i, mv.j);
       step++;
-      pillInfo.textContent = "Improvement: applied a 2-opt swap (greedy).";
-      updatePills();
-      draw();
+      pillInfo.textContent = "Improvement: applied a 2-opt swap.";
+      updatePills(); draw();
       return true;
     }
   }
@@ -425,29 +630,20 @@ These are illustrative animations (not running your trained network), but the co
   function draw(){
     const rect = canvas.getBoundingClientRect();
     const W = rect.width, H = rect.height;
-
-    // background
     ctx.clearRect(0,0,W,H);
 
-    // read theme
     const dark = document.documentElement.getAttribute("data-theme")==="dark";
-    const bg = dark ? "rgba(0,0,0,0)" : "rgba(255,255,255,1)";
     const edge = dark ? "rgba(240,240,240,.35)" : "rgba(0,0,0,.18)";
     const edgeStrong = dark ? "rgba(240,240,240,.70)" : "rgba(0,0,0,.40)";
     const nodeFill = dark ? "rgba(230,230,230,.90)" : "rgba(30,30,30,.85)";
     const nodeStroke = dark ? "rgba(255,255,255,.25)" : "rgba(0,0,0,.15)";
     const accent = getComputedStyle(document.documentElement).getPropertyValue("--global-theme-color").trim() || (dark ? "#00C060" : "#00A550");
 
-    // margins
     const pad = 26;
     function X(x){ return pad + x*(W-2*pad); }
     function Y(y){ return pad + y*(H-2*pad); }
 
-    // draw tour / partial
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = edge;
-
-    function drawPath(path, close=false, strong=false){
+    function drawPath(path, close=false){
       if(path.length<2) return;
       ctx.beginPath();
       ctx.moveTo(X(pts[path[0]][0]), Y(pts[path[0]][1]));
@@ -455,17 +651,16 @@ These are illustrative animations (not running your trained network), but the co
         ctx.lineTo(X(pts[path[k]][0]), Y(pts[path[k]][1]));
       }
       if(close) ctx.lineTo(X(pts[path[0]][0]), Y(pts[path[0]][1]));
-      ctx.strokeStyle = strong ? edgeStrong : edge;
+      ctx.strokeStyle = edgeStrong;
+      ctx.lineWidth = 2;
       ctx.stroke();
     }
 
     if(mode==="construct"){
-      drawPath(partial, false, true);
-      if(partial.length===pts.length){
-        drawPath(partial, true, true);
-      }
+      drawPath(partial, false);
+      if(partial.length===pts.length) drawPath(partial, true);
     }else{
-      drawPath(tour, true, true);
+      drawPath(tour, true);
     }
 
     // highlight last move
@@ -476,13 +671,10 @@ These are illustrative animations (not running your trained network), but the co
       ctx.moveTo(X(pts[lastMove.a][0]), Y(pts[lastMove.a][1]));
       ctx.lineTo(X(pts[lastMove.b][0]), Y(pts[lastMove.b][1]));
       ctx.stroke();
-      ctx.lineWidth = 2;
     }
     if(lastMove && lastMove.type==="2opt"){
-      // highlight the cut edges around i and j after swap (approx)
       const n=tour.length;
       const i=lastMove.i, j=lastMove.j;
-      // reconstruct endpoints for visualization (post-swap)
       const a = tour[i], b = tour[(i+1)%n];
       const c = tour[j], d = tour[(j+1)%n];
       ctx.strokeStyle = accent;
@@ -491,16 +683,13 @@ These are illustrative animations (not running your trained network), but the co
       ctx.moveTo(X(pts[a][0]), Y(pts[a][1])); ctx.lineTo(X(pts[b][0]), Y(pts[b][1]));
       ctx.moveTo(X(pts[c][0]), Y(pts[c][1])); ctx.lineTo(X(pts[d][0]), Y(pts[d][1]));
       ctx.stroke();
-      ctx.lineWidth = 2;
     }
 
     // nodes
     for(let i=0;i<pts.length;i++){
       const px = X(pts[i][0]), py = Y(pts[i][1]);
-      const r = (mode==="construct" && visited[i]) ? 5.5 : 5.0;
-
       ctx.beginPath();
-      ctx.arc(px,py,r,0,Math.PI*2);
+      ctx.arc(px,py,5.2,0,Math.PI*2);
       ctx.fillStyle = nodeFill;
       ctx.fill();
       ctx.lineWidth = 1.2;
@@ -508,103 +697,103 @@ These are illustrative animations (not running your trained network), but the co
       ctx.stroke();
     }
 
-    // start node marker
+    // start marker
     ctx.beginPath();
     ctx.arc(X(pts[0][0]), Y(pts[0][1]), 8, 0, Math.PI*2);
     ctx.strokeStyle = accent;
     ctx.lineWidth = 3;
     ctx.stroke();
-    ctx.lineWidth = 2;
 
-    // footer text
+    // footer
     ctx.fillStyle = dark ? "rgba(255,255,255,.60)" : "rgba(0,0,0,.55)";
     ctx.font = "12px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
     const tag = (mode==="construct")
-      ? "Constructive demo: nearest-neighbor-like selection (illustrative)"
-      : "Improvement demo: greedy 2-opt until local optimum";
+      ? "Constructive: one-pass tour construction (illustrative policy)"
+      : "Improvement: iterative local search (greedy 2-opt)";
     ctx.fillText(tag, 18, H-14);
   }
 
-  // ---- wire up ----
   modeConstruct.addEventListener("click", ()=>{
-    stop();
-    mode="construct";
-    initConstruct();
-    draw();
+    stop(); mode="construct"; initConstruct(); draw();
   });
   modeImprove.addEventListener("click", ()=>{
-    stop();
-    mode="improve";
-    initImprove();
-    draw();
+    stop(); mode="improve"; initImprove(); draw();
   });
   btnReset.addEventListener("click", resetAll);
   btnStep.addEventListener("click", ()=>{ stop(); stepOnce(); });
   btnPlay.addEventListener("click", play);
 
-  // ---- init ----
   resetAll();
   resize();
 })();
 </script>
 
 <div class="note">
-<strong>How to read the demos.</strong><br/>
-Constructive policies are optimized to output a strong tour quickly (and can be boosted with sampling/beam/multi-start). Improvement policies are optimized to <em>spend</em> steps: each step is a learned or heuristic move that hopefully decreases cost. Under tight budgets the first can win; under larger budgets the second often dominates.
+<strong>How to interpret this contrast.</strong><br/>
+Constructive solvers invest modeling capacity into producing a good solution in one decoding pass (optionally with restarts). Improvement solvers invest modeling capacity into choosing <em>moves</em> that refine an incumbent solution. Both can be made budget-aware; they just spend compute differently.
 </div>
 
 ---
 
 ## Training signals
 
-NCO sits at the intersection of optimization and learning, so “training signal” is the main design lever.
+NCO sits at the intersection of optimization and learning, so the training signal is a central design lever.
 
 ### Reinforcement learning (policy gradients)
 
-The simplest approach is to treat the solver as a stochastic policy and optimize expected cost. For constructive decoding, REINFORCE is the standard baseline <d-cite key="bello2016neural,kool2019attention"></d-cite>. For improvement, you can define dense rewards like
+A common path is to treat the solver as a stochastic policy and optimize expected cost. For constructive decoding, REINFORCE-style training is a standard baseline <d-cite key="bello2016neural,kool2019attention"></d-cite>. For improvement, you can define dense rewards such as
 $$
 r_t = C(\pi_t) - C(\pi_{t+1}),
 $$
-or best-so-far rewards that focus learning on the steps that first achieve a new best value.
+or best-so-far rewards that focus learning on steps that first achieve a new incumbent.
 
-Practical patterns:
-- normalize advantages, use baselines, clip gradients;
-- train on a distribution of sizes for robustness;
-- separate “behavior policy” and “update policy” (PPO-style) if doing multi-step rollouts.
+Practical patterns include advantage normalization, strong baselines, entropy regularization, and (for multi-step rollouts) PPO-style updates.
 
 ### Supervised learning (imitation)
 
-When you have a strong teacher (exact for small \(N\), heuristic for large \(N\)), imitation can make training stable and fast. For constructive models, the teacher might be an optimal tour (but there are many optimal permutations); for improvement models, the teacher might be “best move in a neighborhood”.
+When you have a strong teacher (exact for small \(N\), heuristic for large \(N\)), imitation can be stable and efficient. For constructive models the teacher might be an optimal tour (but there are many equivalent permutations); for improvement models the teacher is often “best move in a neighborhood”.
 
-The tricky bit is that in many combinatorial settings there are **many equivalent targets**. A good training recipe handles ties (e.g., set-valued targets) rather than forcing a single arbitrary label.
+A recurring issue is **ambiguity**: many actions can be equally good. Good objectives handle ties explicitly (set-valued targets, soft aggregation) rather than forcing an arbitrary single label.
 
-### Hybrid: imitation → RL fine-tune
+### Hybrid: imitation → RL fine-tuning
 
-A common, effective recipe is:
-1) imitate for stability and a strong starting policy, then  
-2) fine-tune with RL to match the evaluation metric and budget.
+A practical recipe is to imitate for fast convergence and then fine-tune with RL to align optimization with the evaluation budget and metric.
 
 ---
 
 ## Inference under a compute budget
 
-The most deployment-relevant view of NCO is: **what do you get per unit of compute?** A few practical observations:
+A deployment-relevant view of NCO is: *what do you get per unit of compute?* Typical knobs differ by family:
 
-- **Constructive**: one-shot decoding is fast; more compute typically means more *restarts* (sampling, beam, POMO-style multi-start) <d-cite key="kwon2020pomo"></d-cite>.
-- **Improvement**: more compute means more steps; you want policies that keep producing improvements rather than stagnating early.
-- **Hybrids**: generate a good initial tour (constructive) and then refine with learned improvement—often the best of both worlds.
+- **Constructive**: spend extra compute on *restarts* (sampling more tours, POMO-style multi-start, beam search) <d-cite key="kwon2020pomo"></d-cite>.
+- **Improvement**: spend extra compute on *more steps* (more local moves, larger neighborhoods, deeper rollouts).
+- **Hybrid**: construct a good initial tour and then refine it—often a strong baseline when latency is moderate.
 
-A helpful mental model is an anytime curve: solution quality versus time/steps. Constructive methods often start strong but flatten; improvement methods may start weaker but keep improving.
+A helpful diagnostic is an **anytime curve**: best-so-far cost vs time/steps. Different methods can cross depending on (i) budget, (ii) instance distribution, and (iii) implementation details.
 
 ---
 
-## When to use which approach
+## Pitfalls and evaluation
 
-A practical rule of thumb:
+A few common traps in NCO experiments:
 
-- If you need a strong answer **immediately** (tight latency), start with a **constructive** solver (possibly with a small number of restarts).
-- If you have a moderate/large budget and care about **best attainable quality**, use **improvement** (or constructive → improvement).
-- If your instance distribution shifts (new geometry, new constraints), improvement methods can be easier to adapt because they learn **local decision rules** that transfer across sizes and structures.
+- **Budget mismatch.** Training/evaluating “one-shot” while deploying with heavy search (or vice versa) can hide the real tradeoffs.
+- **Unfair comparisons.** Wall-clock time, batch sizes, and hardware matter. Report compute and decoding settings, not just final cost.
+- **Distribution shift.** Learned policies can be sensitive to geometry, constraint changes, or size scaling; include out-of-distribution tests.
+- **Leakage through labels.** If you train on optimal tours for small \(N\), be explicit about what supervision is used and where it comes from.
+- **Ablation blindness.** Representation choices (positional encodings, invariances, neighborhood definitions) often matter as much as the backbone network.
+
+---
+
+## Where the field is going
+
+Several directions are especially active:
+
+- **Better inductive biases** for graphs and constraints (invariances, symmetries, structured decoding).
+- **Test-time adaptation** and memory (learned heuristics that improve as they search).
+- **Non-autoregressive generation** (heatmaps, diffusion) as proposal mechanisms <d-cite key="joshi2019efficient,sun2023difusco"></d-cite>.
+- **Hybridization** with classical optimization (learn the hard decisions, keep the hard constraints exact).
+- **Budget-aware training** so that the policy allocates computation effectively rather than only optimizing end-of-rollout quality.
 
 ---
 
