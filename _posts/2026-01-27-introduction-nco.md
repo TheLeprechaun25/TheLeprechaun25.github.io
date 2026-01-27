@@ -125,10 +125,7 @@ $$
 \qquad \pi_{N+1} := \pi_1.
 $$
 
-It is often useful to see a TSP instance as a graph: each city is a node, and the cost of connecting cities $i$ and $j$ is a distance $d_{ij}$. In Euclidean TSP, $d_{ij} = \|x_i-x_j\|_2$; in more general variants, $d_{ij}$ can come from travel time, asymmetric costs, or constraints.
-
-### Animation: cities and distances
-
+It is often useful to see a TSP instance as a graph: each city is a node, and the cost of connecting cities $i$ and $j$ is a distance $d_{ij}$ represented by an edge.
 The animation below shows a random TSP instance. Hover a city to reveal its distances to others; use the slider to control how many edges are drawn.
 
 <div class="l-page">
