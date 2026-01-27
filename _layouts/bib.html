@@ -29,7 +29,24 @@
         <!-- Entry bib key -->
         <div id="{{entry.key}}" class="col-sm-8">
         <!-- Title -->
-        <div class="title">{{entry.title}}</div>
+        {%- assign paper_link = nil -%}
+        {%- if entry.url -%}
+          {%- assign paper_link = entry.url -%}
+        {%- elsif entry.doi -%}
+          {%- assign paper_link = "https://doi.org/" | append: entry.doi -%}
+        {%- elsif entry.arxiv -%}
+          {%- assign paper_link = "https://arxiv.org/abs/" | append: entry.arxiv -%}
+        {%- elsif entry.website -%}
+          {%- assign paper_link = entry.website -%}
+        {%- endif -%}
+      
+        <div class="title">
+          {%- if paper_link -%}
+            <a href="{{ paper_link }}" target="_blank" rel="noopener">{{ entry.title }}</a>
+          {%- else -%}
+            {{ entry.title }}
+          {%- endif -%}
+        </div>
         <!-- Author -->
         <div class="author">
         {% assign author_array_size = entry.author_array | size %}
