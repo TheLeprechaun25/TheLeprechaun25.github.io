@@ -257,7 +257,7 @@ jekyll-archives:
     tag: '/blog/tag/:name/'
     category: '/blog/category/:name/'
 
-display_tags: ['combinatorial optimization', 'reinforcement learning'] # this tags will be dispalyed on the front page of your blog example: ['formatting', 'images', 'links', 'math', 'code'] 
+display_tags: ['nco'] # this tags will be dispalyed on the front page of your blog example: ['formatting', 'images', 'links', 'math', 'code'] 
 
 # -----------------------------------------------------------------------------
 # Jekyll Scholar
