@@ -1,7 +1,7 @@
 ---
 layout: distill
 title: Introduction to Neural Combinatorial Optimization (NCO)
-description: A visual introduction to NCO via the Traveling Salesperson Problem—constructive decoders and neural improvement.
+description: A visual introduction to NCO via the Traveling Salesperson Problem.
 giscus_comments: true
 date: 2026-01-27
 
@@ -116,22 +116,20 @@ Human-designed solvers can be extraordinarily effective, but adapting them to ne
 
 ## The Traveling Salesperson Problem
 
-We will use the Traveling Salesperson Problem (TSP) as a running example because it is simple to state, widely studied, and still rich enough to expose most of the core design decisions in NCO.
-
-Given cities with coordinates \(x_1,\dots,x_N \in \mathbb{R}^2\), the symmetric Euclidean TSP asks for a permutation \(\pi\) that minimizes tour length:
+Given $N$ cities represented by coordinates $x_1,\dots,x_N \in \mathbb{R}^2$, a tour is an ordering in which each city is visited exactly once and the route returns to the start. The symmetric Euclidean Traveling Salesperson Problem (TSP) asks for the tour of minimum total length, where the cost between two cities is their Euclidean distance (and is symmetric). Writing a tour as a permutation $\pi$, its length is the sum of distances between consecutive cities in that order, including the closing edge back to the first city:
 
 $$
-\min_{\pi \in S_N}\; C(\pi)
+\min_{\pi in \Pi}\; C(\pi)
 \;=\;
 \sum_{t=1}^{N} \left\|x_{\pi_t} - x_{\pi_{t+1}}\right\|_2,
 \qquad \pi_{N+1} := \pi_1.
 $$
 
-A useful view is “graph + distances”: each city is a node, and the cost of connecting cities \(i\) and \(j\) is a distance \(d_{ij}\). In Euclidean TSP, \(d_{ij} = \|x_i-x_j\|_2\); in more general variants, \(d_{ij}\) can come from travel time, asymmetric costs, or constraints.
+It is often useful to see a TSP instance as a graph: each city is a node, and the cost of connecting cities $i$ and $j$ is a distance $d_{ij}$. In Euclidean TSP, $d_{ij} = \|x_i-x_j\|_2$; in more general variants, $d_{ij}$ can come from travel time, asymmetric costs, or constraints.
 
 ### Animation: cities and distances
 
-The animation below shows a random TSP instance. Hover a city to reveal its distances to others; use the slider to control how many “short” edges are drawn (a crude view of local structure).
+The animation below shows a random TSP instance. Hover a city to reveal its distances to others; use the slider to control how many edges are drawn.
 
 <div class="l-page">
   <div class="anim-wrap" id="tspAnimWrap">
@@ -333,7 +331,7 @@ Concretely, an NCO method typically learns one or more of the following:
 - **Decision rules** that choose actions during construction or improvement (which city next, which local move, which edge to cut).
 - **Search priors** that bias exploration toward promising regions of the solution space.
 
-This is not meant to “replace” classical optimization. In practice, many successful NCO systems reuse classical ingredients—feasibility checks, neighborhood operators, decoding schemes—and learn the parts where *good choices are hard to specify* but easy to evaluate with data.
+This is not meant to “replace” classical optimization. In practice, many successful NCO systems reuse classical ingredients (feasibility checks, neighborhood operators, decoding schemes) and learn the parts where *good choices are hard to specify* but easy to evaluate with data.
 
 Historically, NCO accelerated once sequence models and attention made it practical to map **sets/graphs → permutations/structures**, starting with pointer-network style decoders for routing problems <d-cite key="vinyals2015pointer"></d-cite> and then attention-based constructive solvers for TSP <d-cite key="bello2016neural,kool2019attention"></d-cite>. Since then, NCO has expanded to non-autoregressive approaches (heatmaps, diffusion) <d-cite key="joshi2019efficient,sun2023difusco"></d-cite> and to methods that explicitly learn *iterative refinement* (learned local search / neural improvement) <d-cite key="chen2021learning"></d-cite>.
 
@@ -751,7 +749,7 @@ Practical patterns include advantage normalization, strong baselines, entropy re
 
 ### Supervised learning (imitation)
 
-When you have a strong teacher (exact for small \(N\), heuristic for large \(N\)), imitation can be stable and efficient. For constructive models the teacher might be an optimal tour (but there are many equivalent permutations); for improvement models the teacher is often “best move in a neighborhood”.
+When you have a strong teacher (exact solvers for small $N$, heuristics for large $N$), imitation can be stable and efficient. For constructive models the teacher might be an optimal tour (but there are many equivalent permutations); for improvement models the teacher is often “best move in a neighborhood”.
 
 A recurring issue is **ambiguity**: many actions can be equally good. Good objectives handle ties explicitly (set-valued targets, soft aggregation) rather than forcing an arbitrary single label.
 
@@ -765,7 +763,7 @@ A practical recipe is to imitate for fast convergence and then fine-tune with RL
 
 A deployment-relevant view of NCO is: *what do you get per unit of compute?* Typical knobs differ by family:
 
-- **Constructive**: spend extra compute on *restarts* (sampling more tours, POMO-style multi-start, beam search) <d-cite key="kwon2020pomo"></d-cite>.
+- **Constructive**: spend extra compute on *restarts* (sampling more tours, multi-start, beam search) <d-cite key="kwon2020pomo"></d-cite>.
 - **Improvement**: spend extra compute on *more steps* (more local moves, larger neighborhoods, deeper rollouts).
 - **Hybrid**: construct a good initial tour and then refine it—often a strong baseline when latency is moderate.
 
