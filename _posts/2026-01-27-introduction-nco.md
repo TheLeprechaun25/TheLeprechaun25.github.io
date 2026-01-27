@@ -7,7 +7,7 @@ date: 2026-01-27
 
 authors:
   - name: Andoni Irazusta Garmendia
-    url: "https://theleprechaun.github.io/"
+    url: "https://theleprechaun25.github.io/"
     affiliations:
       name: University of the Basque Country (UPV/EHU)
 
