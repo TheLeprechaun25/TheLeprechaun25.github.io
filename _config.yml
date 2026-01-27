@@ -200,7 +200,7 @@ kramdown:
       start_line: 1
 
 # Includes & excludes
-include: ['_pages', 'assets/bibliography']
+include: ['_pages']
 exclude:
   - bin
   - Gemfile
