@@ -4,7 +4,8 @@ title: Introduction to Neural Combinatorial Optimization (NCO)
 description: A visual introduction to NCO via the Traveling Salesperson Problem.
 giscus_comments: true
 date: 2026-01-27
-
+tags:
+  - nco
 authors:
   - name: Andoni Irazusta Garmendia
     url: "https://theleprechaun25.github.io/"
