@@ -278,11 +278,8 @@ Human-designed solvers can be extraordinarily effective, but adapting them to ne
 \sum_{t=1}^{N} \left\|x_{\pi_t} - x_{\pi_{t+1}}\right\|_2,
 \qquad \pi_{N+1} := \pi_1.\]
 
-<p>It is often useful to see a TSP instance as a graph: each city is a node, and the cost of connecting cities $i$ and $j$ is a distance $d_{ij}$. In Euclidean TSP, $d_{ij} = |x_i-x_j|<em>2$; in more general variants, $d</em>{ij}$ can come from travel time, asymmetric costs, or constraints.</p>
-
-<h3 id="animation-cities-and-distances">Animation: cities and distances</h3>
-
-<p>The animation below shows a random TSP instance. Hover a city to reveal its distances to others; use the slider to control how many edges are drawn.</p>
+<p>It is often useful to see a TSP instance as a graph: each city is a node, and the cost of connecting cities $i$ and $j$ is a distance $d_{ij}$ represented by an edge.
+The animation below shows a random TSP instance. Hover a city to reveal its distances to others; use the slider to control how many edges are drawn.</p>
 
 <div class="l-page">
   <div class="anim-wrap" id="tspAnimWrap">

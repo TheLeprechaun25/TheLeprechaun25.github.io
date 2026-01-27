@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="https://theleprechaun25.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://theleprechaun25.github.io/" rel="alternate" type="text/html" hreflang="en" /><updated>2026-01-27T12:10:32+00:00</updated><id>https://theleprechaun25.github.io/feed.xml</id><title type="html">Andoni Irazusta Garmendia</title><subtitle>Personal Page of Andoni Irazusta Garmendia.
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="https://theleprechaun25.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://theleprechaun25.github.io/" rel="alternate" type="text/html" hreflang="en" /><updated>2026-01-27T12:21:35+00:00</updated><id>https://theleprechaun25.github.io/feed.xml</id><title type="html">Andoni Irazusta Garmendia</title><subtitle>Personal Page of Andoni Irazusta Garmendia.
 </subtitle><entry><title type="html">Introduction to Neural Combinatorial Optimization (NCO)</title><link href="https://theleprechaun25.github.io/blog/2026/introduction-nco/" rel="alternate" type="text/html" title="Introduction to Neural Combinatorial Optimization (NCO)" /><published>2026-01-27T00:00:00+00:00</published><updated>2026-01-27T00:00:00+00:00</updated><id>https://theleprechaun25.github.io/blog/2026/introduction-nco</id><content type="html" xml:base="https://theleprechaun25.github.io/blog/2026/introduction-nco/"><![CDATA[<h2 id="combinatorial-optimization">Combinatorial Optimization</h2>
 
 <p>Combinatorial optimization (CO) sits underneath a huge range of real systems: routing and logistics, scheduling, allocation, packing, and graph problems such as partitioning or cuts. What makes these problems challenging is not that the objective is mysterious, but that the number of feasible solutions typically grows <strong>combinatorially</strong> with instance size.</p>
@@ -23,11 +23,8 @@ Human-designed solvers can be extraordinarily effective, but adapting them to ne
 \sum_{t=1}^{N} \left\|x_{\pi_t} - x_{\pi_{t+1}}\right\|_2,
 \qquad \pi_{N+1} := \pi_1.\]
 
-<p>It is often useful to see a TSP instance as a graph: each city is a node, and the cost of connecting cities $i$ and $j$ is a distance $d_{ij}$. In Euclidean TSP, $d_{ij} = |x_i-x_j|<em>2$; in more general variants, $d</em>{ij}$ can come from travel time, asymmetric costs, or constraints.</p>
-
-<h3 id="animation-cities-and-distances">Animation: cities and distances</h3>
-
-<p>The animation below shows a random TSP instance. Hover a city to reveal its distances to others; use the slider to control how many edges are drawn.</p>
+<p>It is often useful to see a TSP instance as a graph: each city is a node, and the cost of connecting cities $i$ and $j$ is a distance $d_{ij}$ represented by an edge.
+The animation below shows a random TSP instance. Hover a city to reveal its distances to others; use the slider to control how many edges are drawn.</p>
 
 <div class="l-page">
   <div class="anim-wrap" id="tspAnimWrap">
