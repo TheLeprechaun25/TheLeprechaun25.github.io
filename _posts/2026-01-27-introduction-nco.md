@@ -790,6 +790,4 @@ Several directions are especially active:
 - **Hybridization** with classical optimization (learn the hard decisions, keep the hard constraints exact).
 - **Budget-aware training** so that the policy allocates computation effectively rather than only optimizing end-of-rollout quality.
 
----
-
 <d-bibliography></d-bibliography>
