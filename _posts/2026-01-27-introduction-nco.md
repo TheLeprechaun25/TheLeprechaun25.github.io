@@ -792,6 +792,4 @@ Several directions are especially active:
 
 ---
 
-## References
-
 <d-bibliography></d-bibliography>
