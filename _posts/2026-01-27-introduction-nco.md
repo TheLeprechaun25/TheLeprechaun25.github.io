@@ -129,10 +129,14 @@ It is often useful to view a TSP instance as a complete weighted graph: each cit
   <div class="anim-wrap" id="tspAnimWrap">
     <div class="anim-toolbar">
       <button id="tspNew">New instance</button>
+      <button id="tspRandTour">Random tour</button>
+
       <span class="pill">Hover cities to see distances</span>
       <span class="pill">Edge threshold</span>
       <input id="tspThresh" type="range" min="0" max="100" value="38" />
+
       <span class="pill" id="tspInfo">Ready.</span>
+      <span class="pill" id="tspTourInfo">Tour length: –</span>
     </div>
     <canvas class="anim-canvas" id="tspCanvas"></canvas>
   </div>
@@ -140,6 +144,9 @@ It is often useful to view a TSP instance as a complete weighted graph: each cit
 
 <script>
 (function(){
+  // -----------------------
+  // RNG + geometry helpers
+  // -----------------------
   function mulberry32(a){
     return function(){
       var t = a += 0x6D2B79F5;
@@ -152,17 +159,56 @@ It is often useful to view a TSP instance as a complete weighted graph: each cit
     const dx=a[0]-b[0], dy=a[1]-b[1];
     return Math.hypot(dx,dy);
   }
+  function tourCost(pts, tour){
+    if(!tour || tour.length < 2) return NaN;
+    let c=0;
+    for(let k=0;k<tour.length;k++){
+      const i=tour[k], j=tour[(k+1)%tour.length];
+      c += dist(pts[i], pts[j]);
+    }
+    return c;
+  }
+  function shuffleInPlace(arr, rand){
+    for(let i=arr.length-1;i>0;i--){
+      const j = Math.floor(rand()*(i+1));
+      const tmp = arr[i]; arr[i]=arr[j]; arr[j]=tmp;
+    }
+    return arr;
+  }
+  function randomTour(n, rand){
+    const tour = Array.from({length:n}, (_,i)=>i);
+    // Keep city 0 fixed as start for nicer visuals (rotation-invariant anyway)
+    const tail = tour.slice(1);
+    shuffleInPlace(tail, rand);
+    return [0].concat(tail);
+  }
 
+  // -----------------------
+  // DOM
+  // -----------------------
   const canvas = document.getElementById("tspCanvas");
   const ctx = canvas.getContext("2d");
-  const btnNew = document.getElementById("tspNew");
-  const slider = document.getElementById("tspThresh");
-  const info = document.getElementById("tspInfo");
 
+  const btnNew = document.getElementById("tspNew");
+  const btnRandTour = document.getElementById("tspRandTour");
+  const slider = document.getElementById("tspThresh");
+
+  const info = document.getElementById("tspInfo");
+  const tourInfo = document.getElementById("tspTourInfo");
+
+  // -----------------------
+  // State
+  // -----------------------
   let rng = mulberry32(20260127);
   let pts = [];
   let hoverIdx = -1;
 
+  // optional tour (null means "no tour drawn")
+  let tour = null;
+
+  // -----------------------
+  // Canvas resize
+  // -----------------------
   function resize(){
     const dpr = window.devicePixelRatio || 1;
     const rect = canvas.getBoundingClientRect();
@@ -173,6 +219,9 @@ It is often useful to view a TSP instance as a complete weighted graph: each cit
   }
   window.addEventListener("resize", resize);
 
+  // -----------------------
+  // Instance creation
+  // -----------------------
   function newInstance(n=36){
     pts=[];
     for(let i=0;i<n;i++){
@@ -181,16 +230,22 @@ It is often useful to view a TSP instance as a complete weighted graph: each cit
       pts.push([x,y]);
     }
     hoverIdx = -1;
+    tour = null; // reset tour when instance changes
     info.textContent = "New instance created.";
+    tourInfo.textContent = "Tour length: –";
     draw();
   }
 
+  // -----------------------
+  // Hover logic
+  // -----------------------
   function pickHover(mx, my){
     const rect = canvas.getBoundingClientRect();
     const W = rect.width, H = rect.height;
     const pad = 26;
     function X(x){ return pad + x*(W-2*pad); }
     function Y(y){ return pad + y*(H-2*pad); }
+
     let best=-1, bestd=1e18;
     for(let i=0;i<pts.length;i++){
       const dx = X(pts[i][0]) - mx;
@@ -219,6 +274,9 @@ It is often useful to view a TSP instance as a complete weighted graph: each cit
     draw();
   });
 
+  // -----------------------
+  // Draw
+  // -----------------------
   function draw(){
     const rect = canvas.getBoundingClientRect();
     const W = rect.width, H = rect.height;
@@ -236,18 +294,21 @@ It is often useful to view a TSP instance as a complete weighted graph: each cit
     function X(x){ return pad + x*(W-2*pad); }
     function Y(y){ return pad + y*(H-2*pad); }
 
-    // compute threshold based on slider percentile of pairwise distances
-    const ds = [];
-    for(let i=0;i<pts.length;i++){
-      for(let j=i+1;j<pts.length;j++){
-        ds.push(dist(pts[i], pts[j]));
+    // threshold from slider percentile of pairwise distances
+    let thr = 0;
+    if(pts.length >= 2){
+      const ds = [];
+      for(let i=0;i<pts.length;i++){
+        for(let j=i+1;j<pts.length;j++){
+          ds.push(dist(pts[i], pts[j]));
+        }
       }
+      ds.sort((a,b)=>a-b);
+      const q = Math.max(0, Math.min(100, +slider.value)) / 100.0;
+      thr = ds[Math.floor(q * (ds.length-1))];
     }
-    ds.sort((a,b)=>a-b);
-    const q = Math.max(0, Math.min(100, +slider.value)) / 100.0;
-    const thr = ds[Math.floor(q * (ds.length-1))];
 
-    // draw "local" edges under threshold (gives intuition about local geometry)
+    // draw edges under threshold
     ctx.lineWidth = 1.2;
     for(let i=0;i<pts.length;i++){
       for(let j=i+1;j<pts.length;j++){
@@ -261,7 +322,7 @@ It is often useful to view a TSP instance as a complete weighted graph: each cit
       }
     }
 
-    // if hovering, draw distances from the selected city with stronger opacity
+    // if hovering, draw distances from selected city
     if(hoverIdx >= 0){
       ctx.lineWidth = 2.6;
       for(let j=0;j<pts.length;j++){
@@ -272,6 +333,20 @@ It is often useful to view a TSP instance as a complete weighted graph: each cit
         ctx.lineTo(X(pts[j][0]), Y(pts[j][1]));
         ctx.stroke();
       }
+    }
+
+    // draw tour if present
+    if(tour && tour.length === pts.length){
+      ctx.strokeStyle = accent;
+      ctx.lineWidth = 3.2;
+      ctx.beginPath();
+      ctx.moveTo(X(pts[tour[0]][0]), Y(pts[tour[0]][1]));
+      for(let k=1;k<tour.length;k++){
+        ctx.lineTo(X(pts[tour[k]][0]), Y(pts[tour[k]][1]));
+      }
+      ctx.lineTo(X(pts[tour[0]][0]), Y(pts[tour[0]][1]));
+      ctx.stroke();
+      ctx.lineWidth = 1.2;
     }
 
     // nodes
@@ -287,27 +362,52 @@ It is often useful to view a TSP instance as a complete weighted graph: each cit
       ctx.strokeStyle = nodeStroke;
       ctx.stroke();
 
-      if(i===hoverIdx){
+      if(i===0){
+        // mark start node
         ctx.beginPath();
         ctx.arc(px,py,r+4.5,0,Math.PI*2);
         ctx.strokeStyle = accent;
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 2.6;
         ctx.stroke();
       }
     }
 
-    // small legend text
+    // legend
     ctx.fillStyle = label;
     ctx.font = "12px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
-    ctx.fillText(`Edge threshold ≈ ${(thr).toFixed(3)} (quantile ${Math.round(q*100)}%)`, 18, H-14);
+    if(pts.length >= 2){
+      const q = Math.round((+slider.value));
+      ctx.fillText(`Edge threshold quantile: ${q}%`, 18, H-14);
+    }
   }
 
+  // -----------------------
+  // UI actions
+  // -----------------------
   slider.addEventListener("input", draw);
+
   btnNew.addEventListener("click", ()=>{
     rng = mulberry32((Math.random()*1e9)>>>0);
     newInstance(36);
   });
 
+  btnRandTour.addEventListener("click", ()=>{
+    if(!pts.length){
+      info.textContent = "Create an instance first.";
+      return;
+    }
+    // use a fresh seed so repeated clicks give different tours
+    const localRng = mulberry32((Math.random()*1e9)>>>0);
+    tour = randomTour(pts.length, localRng);
+    const c = tourCost(pts, tour);
+    tourInfo.textContent = `Tour length: ${c.toFixed(2)}`;
+    info.textContent = "Random tour generated.";
+    draw();
+  });
+
+  // -----------------------
+  // init
+  // -----------------------
   newInstance(36);
   resize();
 })();
