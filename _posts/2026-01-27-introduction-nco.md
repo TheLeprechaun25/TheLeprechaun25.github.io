@@ -123,7 +123,7 @@ $$
 \qquad \pi_{N+1} := \pi_1.
 $$
 
-It is often useful to view a TSP instance as a complete weighted graph: each city is a node, and the cost of traveling between cities $i$ and $j$ is an edge weight $d_{ij}$. The animation below shows a random TSP instance. Hover a city to reveal its distances to others; use the slider to control how many edges are drawn.
+It is often useful to view a TSP instance as a complete weighted graph: each city is a node, and the cost of traveling between cities $i$ and $j$ is an edge weight $d_{ij}$. The animation below shows a random TSP instance. Hover over a city to highlight its distances to the others, and use the slider to control how many edges are displayed. You can also click Random tour to draw a uniformly random tour (a random permutation of the cities), which typically yields a poor solution. In the next section, we will present some strategies to obtain much better solutions.
 
 <div class="l-page">
   <div class="anim-wrap" id="tspAnimWrap">
@@ -131,7 +131,6 @@ It is often useful to view a TSP instance as a complete weighted graph: each cit
       <button id="tspNew">New instance</button>
       <button id="tspRandTour">Random tour</button>
 
-      <span class="pill">Hover cities to see distances</span>
       <span class="pill">Edge threshold</span>
       <input id="tspThresh" type="range" min="0" max="100" value="38" />
 
