@@ -786,14 +786,16 @@ Since then, and imitating the classical optimization algorithms, the space of NC
 
 ### A unifying view
 
-Both families can be described by the same template. Let \(x\) denote the **static instance information** (e.g., city coordinates or a distance matrix). Let \(s_t\) denote the **dynamic state** at decision step \(t\) (information that changes from step to step). A neural solver is then a policy
-\[
-a_t \sim \pi_\theta(\cdot \mid x, s_t),
-\]
-where the action \(a_t\) is either “pick the next element” (constructive) or “apply a modification” (improvement).
+Both families can be described by the same template. Let $x$ denote the **static instance information** (e.g., city coordinates or a distance matrix). Let $s_t$ denote the **dynamic state** at decision step $t$ (information that changes from step to step). A neural solver is then a policy
 
-- In constructive TSP, \(s_t\) typically includes the set of visited cities and the current partial tour.
-- In improvement TSP, \(s_t\) is typically a complete tour (and sometimes a short history of recent moves).
+$$
+a_t \sim \pi_\theta(\cdot \mid x, s_t),
+$$
+
+where the action $a_t$ is either “pick the next element” (constructive) or “apply a modification” (improvement).
+
+- In constructive TSP, $s_t$ typically includes the set of visited cities and the current partial tour.
+- In improvement TSP, $s_t$ is typically a complete tour (and sometimes a short history of recent moves).
 
 This framing makes clear that both are **sequence problems**, differing mainly in *what the action space is* and *how the dynamic state is represented*.
 
@@ -802,12 +804,14 @@ This framing makes clear that both are **sequence problems**, differing mainly i
 We can distinguish two types of constructive methods: Autoregressive and Non-autoregressive methods.
 
 **Autoregressive (AR) construction** builds a tour one city at a time:
-\[
+
+$$
 \pi = (\pi_1,\ldots,\pi_N), \qquad \pi_t \sim \pi_\theta(\cdot \mid x, \pi_{<t}),
-\]
+$$
+
 often implemented with an encoder that embeds the cities and a decoder that attends over remaining (unvisited) nodes. <d-cite key="vinyals2015pointer,kool2019attention"></d-cite>
 
-**Non-autoregressive (NAR) construction** predicts a *global object* in one shot, commonly an edge score matrix (a “heatmap”) \(H_{ij}\) that indicates how compatible it is to connect cities \(i\) and \(j\). A separate decoding procedure is then used to turn \(H\) into a valid tour. This includes approaches based on graph prediction and diffusion-style generation. <d-cite key="joshi2019efficient,sun2023difusco"></d-cite>
+**Non-autoregressive (NAR) construction** predicts a *global object* in one shot, commonly an edge score matrix (a “heatmap”) $H_{ij}$ that indicates how compatible it is to connect cities $i$ and $j$. A separate decoding procedure is then used to turn $H$ into a valid tour. This includes approaches based on graph prediction and diffusion-style generation. <d-cite key="joshi2019efficient,sun2023difusco"></d-cite>
 
 **Typical strength.** Constructive models are excellent at amortizing: after training, a single run can produce a good solution quickly. Extra compute is often spent on *restarts* (sampling multiple candidates and keeping the best) rather than deeper reasoning within one construction.
 
@@ -815,10 +819,11 @@ often implemented with an encoder that embeds the cities and a decoder that atte
 
 ### Neural improvement methods
 
-Improvement methods start from a complete tour \(\pi^{(0)}\) and apply a sequence of local edits:
-\[
+Improvement methods start from a complete tour $\pi^{(0)}$ and apply a sequence of local edits:
+
+$$
 \pi^{(0)} \to \pi^{(1)} \to \cdots \to \pi^{(T)}, \qquad a_t \sim \pi_\theta(\cdot \mid x, \pi^{(t-1)}).
-\]
+$$
 
 This viewpoint connects naturally to “learning to search”: the model is not predicting a tour directly, but learning a strategy for navigating the solution space under a step budget. <d-cite key="chen2021learning"></d-cite>
 
