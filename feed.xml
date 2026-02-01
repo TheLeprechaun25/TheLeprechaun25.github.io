@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="https://theleprechaun25.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://theleprechaun25.github.io/" rel="alternate" type="text/html" hreflang="en" /><updated>2026-02-01T20:35:48+00:00</updated><id>https://theleprechaun25.github.io/feed.xml</id><title type="html">Andoni Irazusta Garmendia</title><subtitle>Personal Page of Andoni Irazusta Garmendia.
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="https://theleprechaun25.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://theleprechaun25.github.io/" rel="alternate" type="text/html" hreflang="en" /><updated>2026-02-01T22:05:47+00:00</updated><id>https://theleprechaun25.github.io/feed.xml</id><title type="html">Andoni Irazusta Garmendia</title><subtitle>Personal Page of Andoni Irazusta Garmendia.
 </subtitle><entry><title type="html">Introduction to Neural Combinatorial Optimization (NCO)</title><link href="https://theleprechaun25.github.io/blog/2026/introduction-nco/" rel="alternate" type="text/html" title="Introduction to Neural Combinatorial Optimization (NCO)" /><published>2026-01-27T00:00:00+00:00</published><updated>2026-01-27T00:00:00+00:00</updated><id>https://theleprechaun25.github.io/blog/2026/introduction-nco</id><content type="html" xml:base="https://theleprechaun25.github.io/blog/2026/introduction-nco/"><![CDATA[<h2 id="combinatorial-optimization">Combinatorial Optimization</h2>
 
 <p>Combinatorial optimization (CO) sits underneath a huge range of real systems: routing and logistics, scheduling, allocation, packing, and graph problems such as partitioning or cuts. What makes these problems challenging is not that the objective is mysterious, but that the number of feasible solutions typically grows <strong>combinatorially</strong> with instance size.</p>
@@ -662,143 +662,97 @@
 })();
 </script>
 
-<div class="note">
-<strong>How to interpret this contrast.</strong><br />
-Constructive solvers invest modeling capacity into producing a good solution in one decoding pass (optionally with restarts). Improvement solvers invest modeling capacity into choosing <em>moves</em> that refine an candidate solution. Both can be made budget-aware; they just spend compute differently.
-</div>
-
 <hr />
 
 <h2 id="why-neural-combinatorial-optimization">Why Neural Combinatorial Optimization</h2>
 
-<p><strong>Neural Combinatorial Optimization (NCO)</strong> adopts a learning perspective on solver design: instead of hand-coding every heuristic rule, we ask whether a model can <strong>learn search strategies</strong> from data and interaction.</p>
+<p>How can we improve over simple heuristics, without paying the computational cost of exact solvers? This is the motivation behind <strong>Neural Combinatorial Optimization (NCO)</strong>. The core idea is to <strong>learn strong heuristics from data</strong>: rather than simple decision rules, we train a neural network model to make the key choices that a solver repeatedly faces.</p>
 
-<p>Concretely, an NCO method typically learns one or more of the following:</p>
+<p>To make it concrete, consider a constructive TSP heuristic such as Nearest Neighbor. At each step it applies a fixed rule: “go to the closest unvisited city.” NCO asks: what if, instead, we could query a model: <em>given this instance and the current city, where should I go next?</em> A learned policy can condition on richer context than a single distance comparison, potentially capturing patterns that are hard to encode with simple rules.</p>
 
-<ul>
-  <li><strong>Representations</strong> that make the relevant structure easy to reason about (sets, graphs, constraints).</li>
-  <li><strong>Decision rules</strong> that choose actions during construction or improvement (which city to visit next, which local move, which edge to cut).</li>
-  <li><strong>Search priors</strong> that bias exploration toward promising regions of the solution space.</li>
-</ul>
-
-<p>This is not meant to “replace” classical optimization. In practice, many successful NCO systems reuse classical ingredients (feasibility checks, neighborhood operators, decoding schemes) and learn the parts where <em>good choices are hard to specify</em> but easy to evaluate with data.</p>
-
-<p>Historically, NCO accelerated once sequence models and attention made it practical to map <strong>sets/graphs → permutations/structures</strong>, starting with pointer-network style decoders for routing problems <d-cite key="vinyals2015pointer"></d-cite> and then attention-based constructive solvers for TSP <d-cite key="bello2016neural,kool2019attention"></d-cite>. Since then, NCO has expanded to non-autoregressive approaches (heatmaps, diffusion) <d-cite key="joshi2019efficient,sun2023difusco"></d-cite> and to methods that explicitly learn <em>iterative refinement</em> (learned local search / neural improvement) <d-cite key="chen2021learning"></d-cite>.</p>
+<p>This learning perspective is attractive because neural networks have shown a strong ability to learn complex input–output mappings from large datasets. In NCO, we leverage that ability by training on a dataset of problem instances, and then deploying the trained model at inference time to produce solutions for <strong>unseen instances</strong>.</p>
 
 <hr />
 
-<h2 id="two-families-of-neural-solvers">Two families of neural solvers</h2>
+<h2 id="neural-combinatorial-optimization-methods">Neural Combinatorial Optimization Methods</h2>
 
-<p>At a high level, and imitating the classical optimization algorithms, many NCO solvers for routing can be grouped into:</p>
+<p>The idea of using neural networks for combinatorial optimization predates modern deep learning: early work explored Hopfield networks for problems like TSP. <d-cite key="hopfield1985tsp"></d-cite> What changed around 2015 is that new neural architectures and training recipes, together with increased computational power, made it practical to learn <em>decision-making policies</em> that operate on variable-size sets and graphs. In routing, a key step was learning to map <strong>sets/graphs → permutations/structures</strong>, first with pointer-style decoders <d-cite key="vinyals2015pointer"></d-cite> and then with attention-based encoder–decoders <d-cite key="bello2016neural,kool2019attention"></d-cite>.</p>
 
+<p>Since then, and imitating the classical optimization algorithms, the space of NCO methods has diversified along two main families:</p>
 <ol>
-  <li><strong>Neural constructive models</strong>: produce a tour in a single decoding run (sometimes with multiple starts).</li>
-  <li><strong>Neural improvement models</strong>: iteratively refine a tour using local moves.</li>
+  <li><strong>Neural Constructive (NC) models</strong>, which produce a solution from scratch.</li>
+  <li><strong>Neural Improvement (NI) models</strong>, which, starting from a complete tour, iteratively apply local modifications to it.</li>
 </ol>
 
-<div class="note">
-<strong>Construct vs improve is a design choice, not a verdict.</strong><br />
-Constructive models output a full solution in one decoding run (often with optional restarts). Improvement models start from a solution and apply local modifications over time. Which is preferable depends on the instance family, the compute budget, and what “good” looks like in deployment. In fact, they can be combined (construct → improve).
-</div>
+<h3 id="a-unifying-view">A unifying view</h3>
 
-<h3 id="neural-constructive-models">Neural constructive models</h3>
-
-<p>A constructive policy builds a solution one decision at a time. The canonical example is an attention-based encoder–decoder:</p>
+<p>Both families can be described by the same template. Let (x) denote the <strong>static instance information</strong> (e.g., city coordinates or a distance matrix). Let (s_t) denote the <strong>dynamic state</strong> at decision step (t) (information that changes from step to step). A neural solver is then a policy
+[
+a_t \sim \pi_\theta(\cdot \mid x, s_t),
+]
+where the action (a_t) is either “pick the next element” (constructive) or “apply a modification” (improvement).</p>
 
 <ul>
-  <li><strong>Encoder</strong>: maps the set of cities to embeddings (often using self-attention).</li>
-  <li><strong>Decoder</strong>: autoregressively selects the next city conditioned on the partial tour and a visited mask.</li>
+  <li>In constructive TSP, (s_t) typically includes the set of visited cities and the current partial tour.</li>
+  <li>In improvement TSP, (s_t) is typically a complete tour (and sometimes a short history of recent moves).</li>
 </ul>
 
-<p>In the attention model for TSP <d-cite key="kool2019attention"></d-cite>, the decoder defines a distribution:
-\(p_\theta(\pi) = \prod_{t=1}^{N} p_\theta(\pi_t \mid \pi_{&lt;t}, x),\)
-and at inference you decode greedily, by sampling, or via structured search (beam, multi-start).</p>
+<p>This framing makes clear that both are <strong>sequence problems</strong>, differing mainly in <em>what the action space is</em> and <em>how the dynamic state is represented</em>.</p>
 
-<p><strong>Typical strength.</strong> Constructive models are excellent at amortizing: after training, a single forward pass can output a good tour quickly. Additional compute is usually spent on <em>restarts</em> (sample more tours, keep the best) rather than deeper reasoning within one run.</p>
+<h3 id="neural-constructive-methods">Neural constructive methods</h3>
+
+<p>We can distinguish two types of constructive methods: Autoregressive and Non-autoregressive methods.</p>
+
+<p><strong>Autoregressive (AR) construction</strong> builds a tour one city at a time:
+[
+\pi = (\pi_1,\ldots,\pi_N), \qquad \pi_t \sim \pi_\theta(\cdot \mid x, \pi_{&lt;t}),
+]
+often implemented with an encoder that embeds the cities and a decoder that attends over remaining (unvisited) nodes. <d-cite key="vinyals2015pointer,kool2019attention"></d-cite></p>
+
+<p><strong>Non-autoregressive (NAR) construction</strong> predicts a <em>global object</em> in one shot, commonly an edge score matrix (a “heatmap”) (H_{ij}) that indicates how compatible it is to connect cities (i) and (j). A separate decoding procedure is then used to turn (H) into a valid tour. This includes approaches based on graph prediction and diffusion-style generation. <d-cite key="joshi2019efficient,sun2023difusco"></d-cite></p>
+
+<p><strong>Typical strength.</strong> Constructive models are excellent at amortizing: after training, a single run can produce a good solution quickly. Extra compute is often spent on <em>restarts</em> (sampling multiple candidates and keeping the best) rather than deeper reasoning within one construction.</p>
 
 <hr />
 
-<h3 id="neural-improvement-models">Neural improvement models</h3>
+<h3 id="neural-improvement-methods">Neural improvement methods</h3>
 
-<p>Neural improvement (learned local search) treats optimization as a sequential decision process:</p>
+<p>Improvement methods start from a complete tour (\pi^{(0)}) and apply a sequence of local edits:
+[
+\pi^{(0)} \to \pi^{(1)} \to \cdots \to \pi^{(T)}, \qquad a_t \sim \pi_\theta(\cdot \mid x, \pi^{(t-1)}).
+]</p>
+
+<p>This viewpoint connects naturally to “learning to search”: the model is not predicting a tour directly, but learning a strategy for navigating the solution space under a step budget. <d-cite key="chen2021learning"></d-cite></p>
+
+<p><strong>Typical strength.</strong> Improvement methods naturally define an anytime procedure: you can stop at any step and return the best tour found so far, trading compute for quality in a direct way.</p>
+
+<hr />
+
+<h2 id="learning-in-nco">Learning in NCO</h2>
+
+<p>After choosing an NCO method, we still need to decide <strong>how the model learns</strong>. In practice there are three common routes:</p>
 
 <ul>
-  <li><strong>State</strong>: current solution (tour) + instance (cities) + optional history.</li>
-  <li><strong>Action</strong>: a local move (e.g., a 2-opt swap).</li>
-  <li><strong>Transition</strong>: apply the move to get a new tour.</li>
-  <li><strong>Reward</strong>: improvement in tour cost (dense) or best-so-far improvement (sparse).</li>
-</ul>
-
-<p>A classic local operator is <strong>2-opt</strong>: pick two tour edges ((i,i+1)) and ((j,j+1)), remove them, and reconnect in the other way (equivalently reverse the segment between them). This removes crossings and frequently reduces cost. The neighborhood size is (O(N^2)), so a learned policy can matter simply by prioritizing which moves to examine.</p>
-
-<p>This connects to broader “learning to search” approaches in CO <d-cite key="chen2021learning,mazyavkina2021reinforcement,bengio2021machine"></d-cite>.</p>
-
-<p><strong>Typical strength.</strong> Improvement models naturally define an anytime procedure: you can stop at any step, keep the best-so-far tour, and trade compute for quality.</p>
-
-<hr />
-
-<h2 id="training-signals">Training signals</h2>
-
-<p>NCO sits at the intersection of optimization and learning, so the training signal is a central design lever.</p>
-
-<h3 id="reinforcement-learning-policy-gradients">Reinforcement learning (policy gradients)</h3>
-
-<p>A common path is to treat the solver as a stochastic policy and optimize expected cost. For constructive decoding, REINFORCE-style training is a standard baseline <d-cite key="bello2016neural,kool2019attention"></d-cite>. For improvement, you can define dense rewards such as
-\(r_t = C(\pi_t) - C(\pi_{t+1}),\)
-or best-so-far rewards that focus learning on steps that first achieve a new candidate.</p>
-
-<p>Practical patterns include advantage normalization, strong baselines, entropy regularization, and (for multi-step rollouts) PPO-style updates.</p>
-
-<h3 id="supervised-learning-imitation">Supervised learning (imitation)</h3>
-
-<p>When you have a strong teacher (exact solvers for small $N$, heuristics for large $N$), imitation can be stable and efficient. For constructive models the teacher might be an optimal tour (but there are many equivalent permutations); for improvement models the teacher is often “best move in a neighborhood”.</p>
-
-<p>A recurring issue is <strong>ambiguity</strong>: many actions can be equally good. Good objectives handle ties explicitly (set-valued targets, soft aggregation) rather than forcing an arbitrary single label.</p>
-
-<h3 id="hybrid-imitation--rl-fine-tuning">Hybrid: imitation → RL fine-tuning</h3>
-
-<p>A practical recipe is to imitate for fast convergence and then fine-tune with RL to align optimization with the evaluation budget and metric.</p>
-
-<hr />
-
-<h2 id="inference-under-a-compute-budget">Inference under a compute budget</h2>
-
-<p>A deployment-relevant view of NCO is: <em>what do you get per unit of compute?</em> Typical knobs differ by family:</p>
-
-<ul>
-  <li><strong>Constructive</strong>: spend extra compute on <em>restarts</em> (sampling more tours, multi-start, beam search) <d-cite key="kwon2020pomo"></d-cite>.</li>
-  <li><strong>Improvement</strong>: spend extra compute on <em>more steps</em> (more local moves, larger neighborhoods, deeper rollouts).</li>
-  <li><strong>Hybrid</strong>: construct a good initial tour and then refine it—often a strong baseline when latency is moderate.</li>
-</ul>
-
-<p>A helpful diagnostic is an <strong>anytime curve</strong>: best-so-far cost vs time/steps. Different methods can cross depending on (i) budget, (ii) instance distribution, and (iii) implementation details.</p>
-
-<hr />
-
-<h2 id="pitfalls-and-evaluation">Pitfalls and evaluation</h2>
-
-<p>A few common traps in NCO experiments:</p>
-
-<ul>
-  <li><strong>Budget mismatch.</strong> Training/evaluating “one-shot” while deploying with heavy search (or vice versa) can hide the real tradeoffs.</li>
-  <li><strong>Unfair comparisons.</strong> Wall-clock time, batch sizes, and hardware matter. Report compute and decoding settings, not just final cost.</li>
-  <li><strong>Distribution shift.</strong> Learned policies can be sensitive to geometry, constraint changes, or size scaling; include out-of-distribution tests.</li>
-  <li><strong>Leakage through labels.</strong> If you train on optimal tours for small (N), be explicit about what supervision is used and where it comes from.</li>
-  <li><strong>Ablation blindness.</strong> Representation choices (positional encodings, invariances, neighborhood definitions) often matter as much as the backbone network.</li>
+  <li>
+    <p><strong>Supervised / imitation learning.</strong><br />
+Train the model to imitate a strong “teacher” (an exact solver, or a good heuristic). This is usually stable and sample-efficient, but producing good labels can be expensive.</p>
+  </li>
+  <li>
+    <p><strong>Reinforcement learning.</strong><br />
+Let the model sample its own decisions and learn from feedback derived from the objective: how good is the constructed tour, or how much does a proposed move improve it? RL avoids the need for optimal labels, but it is typically more data-hungry and can be harder to stabilize.</p>
+  </li>
+  <li>
+    <p><strong>Unsupervised learning.</strong><br />
+Learn a scoring (energy) function that assigns higher scores (lower energy) to better solutions, and then generate solutions by optimizing or sampling from that score. Many score-based and diffusion-style approaches fit this view, where learning focuses on modeling structure and inference performs the actual search.</p>
+  </li>
 </ul>
 
 <hr />
 
-<h2 id="where-the-field-is-going">Where the field is going</h2>
+<h2 id="wrapping-up">Wrapping up</h2>
 
-<p>Several directions are especially active:</p>
+<p>We have now met the main ingredients that motivate Neural Combinatorial Optimization. If there is one takeaway from this introduction, it is that NCO is best viewed as <em>learning solver behavior for a problem family</em>: the model is trained on many instances, and then reused at inference time to make fast, informed choices on unseen instances.</p>
 
-<ul>
-  <li><strong>Better inductive biases</strong> for graphs and constraints (invariances, symmetries, structured decoding).</li>
-  <li><strong>Test-time adaptation</strong> and memory (learned heuristics that improve as they search).</li>
-  <li><strong>Non-autoregressive generation</strong> (heatmaps, diffusion) as proposal mechanisms <d-cite key="joshi2019efficient,sun2023difusco"></d-cite>.</li>
-  <li><strong>Hybridization</strong> with classical optimization (learn the hard decisions, keep the hard constraints exact).</li>
-  <li><strong>Budget-aware training</strong> so that the policy allocates computation effectively rather than only optimizing end-of-rollout quality.</li>
-</ul>
+<p>In the next posts, we will go deeper into (i) how different NCO method families spend compute, (ii) how learning signals shape solver behavior, and (iii) how to evaluate these methods fairly under realistic budgets.</p>
 
 <d-bibliography></d-bibliography>]]></content><author><name>Andoni Irazusta Garmendia</name></author><category term="nco" /><summary type="html"><![CDATA[A visual introduction to NCO via the Traveling Salesperson Problem.]]></summary></entry></feed>
