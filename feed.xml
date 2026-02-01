@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="https://theleprechaun25.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://theleprechaun25.github.io/" rel="alternate" type="text/html" hreflang="en" /><updated>2026-02-01T20:26:55+00:00</updated><id>https://theleprechaun25.github.io/feed.xml</id><title type="html">Andoni Irazusta Garmendia</title><subtitle>Personal Page of Andoni Irazusta Garmendia.
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="https://theleprechaun25.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://theleprechaun25.github.io/" rel="alternate" type="text/html" hreflang="en" /><updated>2026-02-01T20:35:48+00:00</updated><id>https://theleprechaun25.github.io/feed.xml</id><title type="html">Andoni Irazusta Garmendia</title><subtitle>Personal Page of Andoni Irazusta Garmendia.
 </subtitle><entry><title type="html">Introduction to Neural Combinatorial Optimization (NCO)</title><link href="https://theleprechaun25.github.io/blog/2026/introduction-nco/" rel="alternate" type="text/html" title="Introduction to Neural Combinatorial Optimization (NCO)" /><published>2026-01-27T00:00:00+00:00</published><updated>2026-01-27T00:00:00+00:00</updated><id>https://theleprechaun25.github.io/blog/2026/introduction-nco</id><content type="html" xml:base="https://theleprechaun25.github.io/blog/2026/introduction-nco/"><![CDATA[<h2 id="combinatorial-optimization">Combinatorial Optimization</h2>
 
 <p>Combinatorial optimization (CO) sits underneath a huge range of real systems: routing and logistics, scheduling, allocation, packing, and graph problems such as partitioning or cuts. What makes these problems challenging is not that the objective is mysterious, but that the number of feasible solutions typically grows <strong>combinatorially</strong> with instance size.</p>
@@ -20,7 +20,7 @@
 \sum_{t=1}^{N} \left\|x_{\pi_t} - x_{\pi_{t+1}}\right\|_2,
 \qquad \pi_{N+1} := \pi_1.\]
 
-<p>It is often useful to view a TSP instance as a complete weighted graph: each city is a node, and the cost of traveling between cities $i$ and $j$ is an edge weight $d_{ij}$. The animation below shows a random TSP instance. Hover a city to reveal its distances to others; use the slider to control how many edges are drawn.</p>
+<p>It is often useful to view a TSP instance as a complete weighted graph: each city is a node, and the cost of traveling between cities $i$ and $j$ is an edge weight $d_{ij}$. The animation below shows a random TSP instance. Hover over a city to highlight its distances to the others, and use the slider to control how many edges are displayed. You can also click Random tour to draw a uniformly random tour (a random permutation of the cities), which typically yields a poor solution. In the next section, we will present some strategies to obtain much better solutions.</p>
 
 <div class="l-page">
   <div class="anim-wrap" id="tspAnimWrap">
@@ -28,7 +28,6 @@
       <button id="tspNew">New instance</button>
       <button id="tspRandTour">Random tour</button>
 
-      <span class="pill">Hover cities to see distances</span>
       <span class="pill">Edge threshold</span>
       <input id="tspThresh" type="range" min="0" max="100" value="38" />
 
