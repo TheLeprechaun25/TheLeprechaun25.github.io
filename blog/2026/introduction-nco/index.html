@@ -945,15 +945,15 @@
 
 <h3 id="a-unifying-view">A unifying view</h3>
 
-<p>Both families can be described by the same template. Let (x) denote the <strong>static instance information</strong> (e.g., city coordinates or a distance matrix). Let (s_t) denote the <strong>dynamic state</strong> at decision step (t) (information that changes from step to step). A neural solver is then a policy
-[
-a_t \sim \pi_\theta(\cdot \mid x, s_t),
-]
-where the action (a_t) is either “pick the next element” (constructive) or “apply a modification” (improvement).</p>
+<p>Both families can be described by the same template. Let $x$ denote the <strong>static instance information</strong> (e.g., city coordinates or a distance matrix). Let $s_t$ denote the <strong>dynamic state</strong> at decision step $t$ (information that changes from step to step). A neural solver is then a policy</p>
+
+\[a_t \sim \pi_\theta(\cdot \mid x, s_t),\]
+
+<p>where the action $a_t$ is either “pick the next element” (constructive) or “apply a modification” (improvement).</p>
 
 <ul>
-  <li>In constructive TSP, (s_t) typically includes the set of visited cities and the current partial tour.</li>
-  <li>In improvement TSP, (s_t) is typically a complete tour (and sometimes a short history of recent moves).</li>
+  <li>In constructive TSP, $s_t$ typically includes the set of visited cities and the current partial tour.</li>
+  <li>In improvement TSP, $s_t$ is typically a complete tour (and sometimes a short history of recent moves).</li>
 </ul>
 
 <p>This framing makes clear that both are <strong>sequence problems</strong>, differing mainly in <em>what the action space is</em> and <em>how the dynamic state is represented</em>.</p>
@@ -962,13 +962,13 @@ where the action (a_t) is either “pick the next element” (constructive) or �
 
 <p>We can distinguish two types of constructive methods: Autoregressive and Non-autoregressive methods.</p>
 
-<p><strong>Autoregressive (AR) construction</strong> builds a tour one city at a time:
-[
-\pi = (\pi_1,\ldots,\pi_N), \qquad \pi_t \sim \pi_\theta(\cdot \mid x, \pi_{&lt;t}),
-]
-often implemented with an encoder that embeds the cities and a decoder that attends over remaining (unvisited) nodes. <d-cite key="vinyals2015pointer,kool2019attention"></d-cite></p>
+<p><strong>Autoregressive (AR) construction</strong> builds a tour one city at a time:</p>
 
-<p><strong>Non-autoregressive (NAR) construction</strong> predicts a <em>global object</em> in one shot, commonly an edge score matrix (a “heatmap”) (H_{ij}) that indicates how compatible it is to connect cities (i) and (j). A separate decoding procedure is then used to turn (H) into a valid tour. This includes approaches based on graph prediction and diffusion-style generation. <d-cite key="joshi2019efficient,sun2023difusco"></d-cite></p>
+\[\pi = (\pi_1,\ldots,\pi_N), \qquad \pi_t \sim \pi_\theta(\cdot \mid x, \pi_{&lt;t}),\]
+
+<p>often implemented with an encoder that embeds the cities and a decoder that attends over remaining (unvisited) nodes. <d-cite key="vinyals2015pointer,kool2019attention"></d-cite></p>
+
+<p><strong>Non-autoregressive (NAR) construction</strong> predicts a <em>global object</em> in one shot, commonly an edge score matrix (a “heatmap”) $H_{ij}$ that indicates how compatible it is to connect cities $i$ and $j$. A separate decoding procedure is then used to turn $H$ into a valid tour. This includes approaches based on graph prediction and diffusion-style generation. <d-cite key="joshi2019efficient,sun2023difusco"></d-cite></p>
 
 <p><strong>Typical strength.</strong> Constructive models are excellent at amortizing: after training, a single run can produce a good solution quickly. Extra compute is often spent on <em>restarts</em> (sampling multiple candidates and keeping the best) rather than deeper reasoning within one construction.</p>
 
@@ -976,10 +976,9 @@ often implemented with an encoder that embeds the cities and a decoder that atte
 
 <h3 id="neural-improvement-methods">Neural improvement methods</h3>
 
-<p>Improvement methods start from a complete tour (\pi^{(0)}) and apply a sequence of local edits:
-[
-\pi^{(0)} \to \pi^{(1)} \to \cdots \to \pi^{(T)}, \qquad a_t \sim \pi_\theta(\cdot \mid x, \pi^{(t-1)}).
-]</p>
+<p>Improvement methods start from a complete tour $\pi^{(0)}$ and apply a sequence of local edits:</p>
+
+\[\pi^{(0)} \to \pi^{(1)} \to \cdots \to \pi^{(T)}, \qquad a_t \sim \pi_\theta(\cdot \mid x, \pi^{(t-1)}).\]
 
 <p>This viewpoint connects naturally to “learning to search”: the model is not predicting a tour directly, but learning a strategy for navigating the solution space under a step budget. <d-cite key="chen2021learning"></d-cite></p>
 
