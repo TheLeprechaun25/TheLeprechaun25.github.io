@@ -825,7 +825,7 @@ $$
 \pi^{(0)} \to \pi^{(1)} \to \cdots \to \pi^{(T)}, \qquad a_t \sim \pi_\theta(\cdot \mid x, \pi^{(t-1)}).
 $$
 
-This viewpoint connects naturally to “learning to search”: the model is not predicting a tour directly, but learning a strategy for navigating the solution space under a step budget. <d-cite key="chen2021learning"></d-cite>
+This viewpoint connects naturally to “learning to search”: the model is not predicting a tour directly, but learning a strategy for navigating the solution space under a step budget. <d-cite key="chen2019learning"></d-cite>
 
 **Typical strength.** Improvement methods naturally define an anytime procedure: you can stop at any step and return the best tour found so far, trading compute for quality in a direct way.
 
