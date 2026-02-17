@@ -267,9 +267,9 @@ L(\pi; X^{(N)}) = \sum_{t=1}^{N} |x_{\pi_t}-x_{\pi_{t+1}}|_2.
 ]
 Given a step budget (T), the goal is to quickly drive the tour cost down.</p>
 
-<p>:::note
-<strong>One sentence mental model:</strong> NI is a learned local-search heuristic whose policy is applied repeatedly; scale generalization asks whether that heuristic remains valid when (N) grows.
-:::</p>
+<blockquote>
+  <p><strong>One sentence mental model:</strong> NI is a learned local-search heuristic whose policy is applied repeatedly; scale generalization asks whether that heuristic remains valid when (N) grows.</p>
+</blockquote>
 
 <hr>
 
@@ -350,9 +350,9 @@ p_T(a\mid s)\propto \exp!\big(-Q^{(2)}(s,a)/\tau\big),
 \min_\theta\; \mathbb{E}\big[ \mathrm{KL}(p_T(\cdot\mid s)\,|\,\pi_\theta(\cdot\mid s))\big].
 ]</p>
 
-<p>:::note
-<strong>Why this matters for scale:</strong> the number of near-tied 2-step choices tends to increase with (N), so one-hot labels become brittle. A soft teacher distribution can stabilize training.
-:::</p>
+<blockquote>
+  <p><strong>Why this matters for scale:</strong> the number of near-tied 2-step choices tends to increase with (N), so one-hot labels become brittle. A soft teacher distribution can stabilize training.</p>
+</blockquote>
 
 <hr>
 

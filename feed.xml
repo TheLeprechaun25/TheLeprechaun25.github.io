@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="https://theleprechaun25.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://theleprechaun25.github.io/" rel="alternate" type="text/html" hreflang="en" /><updated>2026-02-17T20:13:06+00:00</updated><id>https://theleprechaun25.github.io/feed.xml</id><title type="html">Andoni Irazusta Garmendia</title><subtitle>Personal Page of Andoni Irazusta Garmendia.
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="https://theleprechaun25.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://theleprechaun25.github.io/" rel="alternate" type="text/html" hreflang="en" /><updated>2026-02-17T20:32:13+00:00</updated><id>https://theleprechaun25.github.io/feed.xml</id><title type="html">Andoni Irazusta Garmendia</title><subtitle>Personal Page of Andoni Irazusta Garmendia.
 </subtitle><entry><title type="html">Scale Generalization Problem in NCO</title><link href="https://theleprechaun25.github.io/blog/2026/scale-generalization-problem/" rel="alternate" type="text/html" title="Scale Generalization Problem in NCO" /><published>2026-02-17T00:00:00+00:00</published><updated>2026-02-17T00:00:00+00:00</updated><id>https://theleprechaun25.github.io/blog/2026/scale-generalization-problem</id><content type="html" xml:base="https://theleprechaun25.github.io/blog/2026/scale-generalization-problem/"><![CDATA[<h2 id="neural-improvement-for-the-tsp">Neural Improvement for the TSP</h2>
 
 <p>Neural Combinatorial Optimization (NCO) often gets introduced through <em>constructive</em> models: a policy that builds a solution from scratch, one decision at a time. Neural Improvement (NI) flips the script: start from an existing solution and repeatedly apply small edits that make it better.</p>
@@ -20,9 +20,9 @@ L(\pi; X^{(N)}) = \sum_{t=1}^{N} |x_{\pi_t}-x_{\pi_{t+1}}|_2.
 ]
 Given a step budget (T), the goal is to quickly drive the tour cost down.</p>
 
-<p>:::note
-<strong>One sentence mental model:</strong> NI is a learned local-search heuristic whose policy is applied repeatedly; scale generalization asks whether that heuristic remains valid when (N) grows.
-:::</p>
+<blockquote>
+  <p><strong>One sentence mental model:</strong> NI is a learned local-search heuristic whose policy is applied repeatedly; scale generalization asks whether that heuristic remains valid when (N) grows.</p>
+</blockquote>
 
 <hr />
 
@@ -103,9 +103,9 @@ p_T(a\mid s)\propto \exp!\big(-Q^{(2)}(s,a)/\tau\big),
 \min_\theta\; \mathbb{E}\big[ \mathrm{KL}(p_T(\cdot\mid s)\,|\,\pi_\theta(\cdot\mid s))\big].
 ]</p>
 
-<p>:::note
-<strong>Why this matters for scale:</strong> the number of near-tied 2-step choices tends to increase with (N), so one-hot labels become brittle. A soft teacher distribution can stabilize training.
-:::</p>
+<blockquote>
+  <p><strong>Why this matters for scale:</strong> the number of near-tied 2-step choices tends to increase with (N), so one-hot labels become brittle. A soft teacher distribution can stabilize training.</p>
+</blockquote>
 
 <hr />
 
