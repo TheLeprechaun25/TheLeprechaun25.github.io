@@ -19,9 +19,6 @@ toc:
   - name: Why scale generalization is hard
   - name: 2-step imitation learning across sizes
   - name: Starting positions, symmetries, and label noise
-    subsections:
-      - name: A tiny example: the same tour, two different labels
-      - name: Fixes: canonicalization vs invariant actions
   - name: What to measure and how to stress-test
   - name: References
 
