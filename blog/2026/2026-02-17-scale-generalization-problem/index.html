@@ -1,0 +1,140 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html><body>
+<h2 id="neural-improvement-for-the-tsp">Neural Improvement for the TSP</h2>
+
+<p>Neural Combinatorial Optimization (NCO) often gets introduced through <em>constructive</em> models: a policy that builds a solution from scratch, one decision at a time. Neural Improvement (NI) flips the script: start from an existing solution and repeatedly apply small edits that make it better.</p>
+
+<p>The Traveling Salesperson Problem (TSP) will be our playground to explain NI.</p>
+
+<p>A TSP instance with (N) cities is a set of coordinates
+[
+X^{(N)} = (x_1,\ldots,x_N)\in \mathbb{R}^{N\times 2}.
+]
+A tour is a Hamiltonian cycle, commonly represented as a permutation (\pi\in S_N), with cyclic indexing (\pi_{N+1}=\pi_1). The tour length is
+[
+L(\pi; X^{(N)}) = \sum_{t=1}^{N} |x_{\pi_t}-x_{\pi_{t+1}}|_2.
+]</p>
+
+<p>In NI, we also define a <em>move operator</em> (\Phi) (e.g., 2-opt), and an action (a_t) that selects a particular move. Starting from an initial tour (\pi^{(0)}), NI produces a sequence
+[
+\pi^{(t+1)} = \Phi(\pi^{(t)}, a_t),\qquad t=0,1,\ldots,T-1.
+]
+Given a step budget (T), the goal is to quickly drive the tour cost down.</p>
+
+<p>:::note
+<strong>One sentence mental model:</strong> NI is a learned local-search heuristic whose policy is applied repeatedly; scale generalization asks whether that heuristic remains valid when (N) grows.
+:::</p>
+
+<hr>
+
+<h2 id="why-scale-generalization-is-hard">Why scale generalization is hard</h2>
+
+<p>If you train on TSP instances with (N\in[20,100]), you’d love the same learned improver to work on (N=500) or (N=1000). That is the <em>cross-scale generalization</em> problem.</p>
+
+<h3 id="1-the-action-set-grows-with-n">1) The action set grows with (N)</h3>
+
+<table>
+  <tbody>
+    <tr>
+      <td>For 2-opt, an action is typically “pick two breakpoints” ((i,j)), leading to (</td>
+      <td>\mathcal{A}_N</td>
+      <td>=\Theta(N^2)). Even if your model outputs a score for every candidate move, the decision surface changes with (N).</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>In plain terms: at (N=50) you might have a handful of obviously good 2-opt moves; at (N=500), you have <em>many</em> plausible moves, and the best ones can be annoyingly close.</p>
+
+<h3 id="2-the-state-distribution-shifts-with-n">2) The state distribution shifts with (N)</h3>
+
+<p>A random tour at (N=50) looks different than at (N=500). So does a “partially improved” tour after (t) edits. The density of crossings, typical edge lengths, and the distribution of “available easy wins” all change.</p>
+
+<p>So even if your architecture can technically process any (N), the model still faces a distribution shift:
+[
+s \sim \mathcal{D}_N \quad \text{changes with } N.
+]</p>
+
+<h3 id="3-the-horizon-grows">3) The horizon grows</h3>
+
+<p>If your inference budget scales like (T(N)=4N) for example, then the policy is used for much longer rollouts on large instances. Small systematic biases that are harmless at (N=50) can compound at (N=500).</p>
+
+<hr>
+
+<h2 id="2-step-imitation-learning-across-sizes">2-step imitation learning across sizes</h2>
+
+<p>Let’s think how could we train a NI policy using imitation learning (IL).</p>
+
+<p>We could build a “teacher” that chooses the best move, then train a network to imitate it. But in NI, a <em>myopic</em> teacher can be misleading because some moves are “setup moves” that enable better improvements later.</p>
+
+<p>That motivates a <strong>k-step optimal teacher</strong>. Let’s use <strong>k=2</strong> to start.</p>
+
+<p>Let (s=(X^{(N)},\pi)) be the state. For a first action (a_1), define the 2-step lookahead value
+[
+Q^{(2)}(s,a_1) = \min_{a_2\in \mathcal{A}<em>N(\Phi(\pi,a_1))}
+L\big(\Phi(\Phi(\pi,a_1),a_2); X^{(N)}\big).
+]
+Then the teacher action is
+[
+a^\star(s) = \arg\min</em>{a_1\in\mathcal{A}_N(\pi)} Q^{(2)}(s,a_1).
+]</p>
+
+<p>Your IL objective becomes
+[
+\min_\theta\; \mathbb{E}<em>{s\sim\mathcal{D}}
+\big[ -\log \pi</em>\theta(a^\star(s)\mid s) \big].
+]</p>
+
+<h3 id="a-simple-setup-move-example">A simple “setup move” example</h3>
+
+<p>Suppose three candidate first moves have immediate improvements:</p>
+
+<ul>
+  <li>(a): improves by (+1.0), but then nothing good remains (\Rightarrow) total (+1.0).</li>
+  <li>(b): improves by (+0.2), but unlocks a second move of (+3.0) (\Rightarrow) total (+3.2).</li>
+  <li>(c): improves by (+0.8), then (+0.1) (\Rightarrow) total (+0.9).</li>
+</ul>
+
+<p>A greedy teacher picks (a). A 2-step teacher picks (b).<br>
+So 2-step IL teaches “planning” even in a local-search setting.</p>
+
+<p>A useful tweak is <strong>soft imitation</strong>:
+[
+p_T(a\mid s)\propto \exp!\big(-Q^{(2)}(s,a)/\tau\big),
+\qquad
+\min_\theta\; \mathbb{E}\big[ \mathrm{KL}(p_T(\cdot\mid s)\,|\,\pi_\theta(\cdot\mid s))\big].
+]</p>
+
+<p>:::note
+<strong>Why this matters for scale:</strong> the number of near-tied 2-step choices tends to increase with (N), so one-hot labels become brittle. A soft teacher distribution can stabilize training.
+:::</p>
+
+<hr>
+
+<h2 id="what-to-measure-and-how-to-stress-test">What to measure and how to stress-test</h2>
+
+<p>If your goal is <em>cross-scale generalization</em>, you want evaluations that separate “works on the training distribution” from “learned the right invariances and planning heuristics”.</p>
+
+<h3 id="1-cross-scale-rollout-curves-anytime-performance">1) Cross-scale rollout curves (anytime performance)</h3>
+
+<p>For each (N), plot best-so-far tour length versus steps (t), normalized by a strong reference:
+[
+\text{gap}(t) = \frac{L(\pi^{(t)}) - L_{\text{ref}}}{L_{\text{ref}}}\times 100\%.
+]
+The reference can be a classical solver/heuristic (or best-known on synthetic benchmarks).</p>
+
+<p>The key is not only final gap, but how the curve degrades as (N) increases.</p>
+
+<h3 id="2-teacher-consistency-across-sizes">2) Teacher consistency across sizes</h3>
+
+<p>If the teacher changes implementation with (N) (e.g., exact depth-2 at small sizes, approximate at large sizes), quantify the discrepancy on overlapping sizes. This helps you separate “student failed to generalize” from “teacher changed”.</p>
+
+<h3 id="3-start-from-different-initializations">3) Start from different initializations</h3>
+
+<p>NI performance depends heavily on the initial tour distribution: random, greedy, constructive neural, POMO-style sampling, etc. Cross-scale generalization can look strong from one initializer and collapse from another.</p>
+
+<p>A simple takeaway: <strong>changing the initializer changes the state distribution</strong>, and the learned improver is only as robust as the diversity of states it saw during training.</p>
+
+<hr>
+
+<h2 id="references">References</h2>
+</body></html>
