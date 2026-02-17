@@ -115,9 +115,8 @@ In NI, we also define a *move operator* \(\Phi\) (e.g., 2-opt), and an action \(
 \]
 Given a step budget \(T\), the goal is to quickly drive the tour cost down.
 
-:::note
-**One sentence mental model:** NI is a learned local-search heuristic whose policy is applied repeatedly; scale generalization asks whether that heuristic remains valid when \(N\) grows.
-:::
+> **One sentence mental model:** NI is a learned local-search heuristic whose policy is applied repeatedly; scale generalization asks whether that heuristic remains valid when \(N\) grows.
+
 
 ---
 
@@ -189,10 +188,7 @@ p_T(a\mid s)\propto \exp\!\big(-Q^{(2)}(s,a)/\tau\big),
 \min_\theta\; \mathbb{E}\big[ \mathrm{KL}(p_T(\cdot\mid s)\,\|\,\pi_\theta(\cdot\mid s))\big].
 \]
 
-
-:::note
-**Why this matters for scale:** the number of near-tied 2-step choices tends to increase with \(N\), so one-hot labels become brittle. A soft teacher distribution can stabilize training.
-:::
+> **Why this matters for scale:** the number of near-tied 2-step choices tends to increase with \(N\), so one-hot labels become brittle. A soft teacher distribution can stabilize training.
 
 ---
 
