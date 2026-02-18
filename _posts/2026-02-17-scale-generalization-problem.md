@@ -101,18 +101,23 @@ Neural Combinatorial Optimization (NCO) often gets introduced through *construct
 The Traveling Salesperson Problem (TSP) will be our playground to explain NI.
 
 A TSP instance with $N$ cities is a set of coordinates
+
 \[
 X^{(N)} = (x_1,\ldots,x_N)\in \mathbb{R}^{N\times 2}.
 \]
+
 A tour is a Hamiltonian cycle, commonly represented as a permutation $\pi\in S_N$, with cyclic indexing $\pi_{N+1}=\pi_1$. The tour length is
+
 \[
 L(\pi; X^{(N)}) = \sum_{t=1}^{N} \|x_{\pi_t}-x_{\pi_{t+1}}\|_2.
 \]
 
 In NI, we also define a *move operator* $\Phi$ (e.g., 2-opt), and an action $a_t$ that selects a particular move. Starting from an initial tour $\pi^{(0)}$, NI produces a sequence
+
 \[
 \pi^{(t+1)} = \Phi(\pi^{(t)}, a_t),\qquad t=0,1,\ldots,T-1.
 \]
+
 Given a step budget $T$, the goal is to quickly drive the tour cost down.
 
 > **One sentence mental model:** NI is a learned local-search heuristic whose policy is applied repeatedly; scale generalization asks whether that heuristic remains valid when $N$ grows.
@@ -134,6 +139,7 @@ In plain terms: at $N=50$ you might have a handful of obviously good 2-opt moves
 A random tour at $N=50$ looks different than at $N=500$. So does a “partially improved” tour after $t$ edits. The density of crossings, typical edge lengths, and the distribution of “available easy wins” all change.
 
 So even if your architecture can technically process any $N$, the model still faces a distribution shift:
+
 \[
 s \sim \mathcal{D}_N \quad \text{changes with } N.
 \]
@@ -153,16 +159,20 @@ We could build a “teacher” that chooses the best move, then train a network 
 That motivates a **k-step optimal teacher**. Let's use **k=2** to start.
 
 Let $s=(X^{(N)},\pi)$ be the state. For a first action $a_1$, define the 2-step lookahead value
+
 \[
 Q^{(2)}(s,a_1) = \min_{a_2\in \mathcal{A}_N(\Phi(\pi,a_1))}
 L\big(\Phi(\Phi(\pi,a_1),a_2); X^{(N)}\big).
 \]
+
 Then the teacher action is
+
 \[
 a^\star(s) = \arg\min_{a_1\in\mathcal{A}_N(\pi)} Q^{(2)}(s,a_1).
 \]
 
 Your IL objective becomes
+
 \[
 \min_\theta\; \mathbb{E}_{s\sim\mathcal{D}}
 \big[ -\log \pi_\theta(a^\star(s)\mid s) \big].
@@ -180,6 +190,7 @@ A greedy teacher picks $a$. A 2-step teacher picks $b$.
 So 2-step IL teaches “planning” even in a local-search setting.
 
 A useful tweak is **soft imitation**:
+
 \[
 p_T(a\mid s)\propto \exp\!\big(-Q^{(2)}(s,a)/\tau\big),
 \qquad
@@ -197,9 +208,11 @@ If your goal is *cross-scale generalization*, you want evaluations that separate
 ### 1) Cross-scale rollout curves (anytime performance)
 
 For each $N$, plot best-so-far tour length versus steps $t$, normalized by a strong reference:
+
 \[
 \text{gap}(t) = \frac{L(\pi^{(t)}) - L_{\text{ref}}}{L_{\text{ref}}}\times 100\%.
 \]
+
 The reference can be a classical solver/heuristic (or best-known on synthetic benchmarks).
 
 The key is not only final gap, but how the curve degrades as $N$ increases.
