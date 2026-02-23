@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="https://theleprechaun25.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://theleprechaun25.github.io/" rel="alternate" type="text/html" hreflang="en" /><updated>2026-02-23T21:03:35+00:00</updated><id>https://theleprechaun25.github.io/feed.xml</id><title type="html">Andoni Irazusta Garmendia</title><subtitle>Personal Page of Andoni Irazusta Garmendia.
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="https://theleprechaun25.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://theleprechaun25.github.io/" rel="alternate" type="text/html" hreflang="en" /><updated>2026-02-23T21:10:31+00:00</updated><id>https://theleprechaun25.github.io/feed.xml</id><title type="html">Andoni Irazusta Garmendia</title><subtitle>Personal Page of Andoni Irazusta Garmendia.
 </subtitle><entry><title type="html">Can a Weekend + LLMs Produce a New Neural Solver for the Quadratic Assignment Problem?</title><link href="https://theleprechaun25.github.io/blog/2026/qap-weekend/" rel="alternate" type="text/html" title="Can a Weekend + LLMs Produce a New Neural Solver for the Quadratic Assignment Problem?" /><published>2026-02-23T00:00:00+00:00</published><updated>2026-02-23T00:00:00+00:00</updated><id>https://theleprechaun25.github.io/blog/2026/qap-weekend</id><content type="html" xml:base="https://theleprechaun25.github.io/blog/2026/qap-weekend/"><![CDATA[<h2 id="motivation">Motivation</h2>
 
 <p>LLMs have gotten surprisingly competent at the core task of research projects: reading papers, writing code, and turning messy thoughts into structured text. 
@@ -196,21 +196,15 @@ For each item give:</li>
 
 <p>A TSP instance with $N$ cities is a set of coordinates</p>
 
-<p>[
-X^{(N)} = (x_1,\ldots,x_N)\in \mathbb{R}^{N\times 2}.
-]</p>
+\[X^{(N)} = (x_1,\ldots,x_N)\in \mathbb{R}^{N\times 2}.\]
 
 <p>A tour is a Hamiltonian cycle, commonly represented as a permutation $\pi\in S_N$, with cyclic indexing $\pi_{N+1}=\pi_1$. The tour length is</p>
 
-<p>[
-L(\pi; X^{(N)}) = \sum_{t=1}^{N} |x_{\pi_t}-x_{\pi_{t+1}}|_2.
-]</p>
+\[L(\pi; X^{(N)}) = \sum_{t=1}^{N} \|x_{\pi_t}-x_{\pi_{t+1}}\|_2.\]
 
 <p>In NI, we also define a <em>move operator</em> $\Phi$ (e.g., 2-opt), and an action $a_t$ that selects a particular move. Starting from an initial tour $\pi^{(0)}$, NI produces a sequence</p>
 
-<p>[
-\pi^{(t+1)} = \Phi(\pi^{(t)}, a_t),\qquad t=0,1,\ldots,T-1.
-]</p>
+\[\pi^{(t+1)} = \Phi(\pi^{(t)}, a_t),\qquad t=0,1,\ldots,T-1.\]
 
 <p>Given a step budget $T$, the goal is to quickly drive the tour cost down.</p>
 
@@ -244,9 +238,7 @@ L(\pi; X^{(N)}) = \sum_{t=1}^{N} |x_{\pi_t}-x_{\pi_{t+1}}|_2.
 
 <p>So even if your architecture can technically process any $N$, the model still faces a distribution shift:</p>
 
-<p>[
-s \sim \mathcal{D}_N \quad \text{changes with } N.
-]</p>
+\[s \sim \mathcal{D}_N \quad \text{changes with } N.\]
 
 <h3 id="3-the-horizon-grows">3) The horizon grows</h3>
 
@@ -264,23 +256,17 @@ s \sim \mathcal{D}_N \quad \text{changes with } N.
 
 <p>Let $s=(X^{(N)},\pi)$ be the state. For a first action $a_1$, define the 2-step lookahead value</p>
 
-<p>[
-Q^{(2)}(s,a_1) = \min_{a_2\in \mathcal{A}_N(\Phi(\pi,a_1))}
-L\big(\Phi(\Phi(\pi,a_1),a_2); X^{(N)}\big).
-]</p>
+\[Q^{(2)}(s,a_1) = \min_{a_2\in \mathcal{A}_N(\Phi(\pi,a_1))}
+L\big(\Phi(\Phi(\pi,a_1),a_2); X^{(N)}\big).\]
 
 <p>Then the teacher action is</p>
 
-<p>[
-a^\star(s) = \arg\min_{a_1\in\mathcal{A}_N(\pi)} Q^{(2)}(s,a_1).
-]</p>
+\[a^\star(s) = \arg\min_{a_1\in\mathcal{A}_N(\pi)} Q^{(2)}(s,a_1).\]
 
 <p>Your IL objective becomes</p>
 
-<p>[
-\min_\theta\; \mathbb{E}<em>{s\sim\mathcal{D}}
-\big[ -\log \pi</em>\theta(a^\star(s)\mid s) \big].
-]</p>
+\[\min_\theta\; \mathbb{E}_{s\sim\mathcal{D}}
+\big[ -\log \pi_\theta(a^\star(s)\mid s) \big].\]
 
 <h3 id="a-simple-setup-move-example">A simple “setup move” example</h3>
 
@@ -297,11 +283,9 @@ So 2-step IL teaches “planning” even in a local-search setting.</p>
 
 <p>A useful tweak is <strong>soft imitation</strong>:</p>
 
-<p>[
-p_T(a\mid s)\propto \exp!\big(-Q^{(2)}(s,a)/\tau\big),
+\[p_T(a\mid s)\propto \exp\!\big(-Q^{(2)}(s,a)/\tau\big),
 \qquad
-\min_\theta\; \mathbb{E}\big[ \mathrm{KL}(p_T(\cdot\mid s)\,|\,\pi_\theta(\cdot\mid s))\big].
-]</p>
+\min_\theta\; \mathbb{E}\big[ \mathrm{KL}(p_T(\cdot\mid s)\,\|\,\pi_\theta(\cdot\mid s))\big].\]
 
 <blockquote>
   <p><strong>Why this matters for scale:</strong> the number of near-tied 2-step choices tends to increase with $N$, so one-hot labels become brittle. A soft teacher distribution can stabilize training.</p>
@@ -317,9 +301,7 @@ p_T(a\mid s)\propto \exp!\big(-Q^{(2)}(s,a)/\tau\big),
 
 <p>For each $N$, plot best-so-far tour length versus steps $t$, normalized by a strong reference:</p>
 
-<p>[
-\text{gap}(t) = \frac{L(\pi^{(t)}) - L_{\text{ref}}}{L_{\text{ref}}}\times 100\%.
-]</p>
+\[\text{gap}(t) = \frac{L(\pi^{(t)}) - L_{\text{ref}}}{L_{\text{ref}}}\times 100\%.\]
 
 <p>The reference can be a classical solver/heuristic (or best-known on synthetic benchmarks).</p>
 

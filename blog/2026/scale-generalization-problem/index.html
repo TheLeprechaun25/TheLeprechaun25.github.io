@@ -61,67 +61,6 @@
     <script src="/assets/js/distillpub/transforms.v2.js"></script>
     <script src="/assets/js/distillpub/overrides.js"></script>
     
-    <!-- Page/Post style -->
-    <style type="text/css">
-      .note {
-  padding: 12px 14px;
-  border-radius: 14px;
-  border: 1px solid rgba(0,0,0,.12);
-  background: rgba(0,0,0,.03);
-  margin: 14px 0;
-} html[data-theme='dark'] .note{
-  border: 1px solid rgba(255,255,255,.12);
-  background: rgba(255,255,255,.05);
-} .anim-wrap{
-  border-radius: 18px;
-  border: 1px solid rgba(0,0,0,.12);
-  overflow: hidden;
-  background: white;
-} html[data-theme='dark'] .anim-wrap{
-  border: 1px solid rgba(255,255,255,.12);
-  background: rgba(20,20,20,.55);
-} .anim-toolbar{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  align-items:center;
-  padding: 10px 12px;
-  border-bottom: 1px solid rgba(0,0,0,.08);
-  background: rgba(0,0,0,.02);
-} html[data-theme='dark'] .anim-toolbar{
-  border-bottom: 1px solid rgba(255,255,255,.10);
-  background: rgba(255,255,255,.04);
-} .anim-toolbar button{
-  padding: 7px 10px;
-  border-radius: 12px;
-  border: 1px solid rgba(0,0,0,.18);
-  background: rgba(255,255,255,.7);
-  cursor:pointer;
-  font-weight: 600;
-} html[data-theme='dark'] .anim-toolbar button{
-  border: 1px solid rgba(255,255,255,.16);
-  background: rgba(0,0,0,.25);
-  color: rgba(255,255,255,.92);
-} .anim-toolbar input[type="range"]{
-  width: 150px;
-} .anim-toolbar .pill{
-  padding: 6px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(0,0,0,.12);
-  background: rgba(0,0,0,.03);
-  font-size: 13px;
-} html[data-theme='dark'] .anim-toolbar .pill{
-  border: 1px solid rgba(255,255,255,.12);
-  background: rgba(255,255,255,.05);
-} .anim-canvas{
-  width:100%;
-  height: 520px;
-  display:block;
-} @media (max-width: 680px){
-  .anim-canvas{ height: 420px; }
-}
-
-    </style>
   </head>
 
   <body>
@@ -136,7 +75,7 @@
           "authorURL": "https://theleprechaun25.github.io/",
           "affiliations": [
             {
-              "name": "University of the Basque Country (UPV/EHU)",
+              "name": "",
               "url": ""
             }
           ]
@@ -254,21 +193,15 @@
 
 <p>A TSP instance with $N$ cities is a set of coordinates</p>
 
-<p>[
-X^{(N)} = (x_1,\ldots,x_N)\in \mathbb{R}^{N\times 2}.
-]</p>
+\[X^{(N)} = (x_1,\ldots,x_N)\in \mathbb{R}^{N\times 2}.\]
 
 <p>A tour is a Hamiltonian cycle, commonly represented as a permutation $\pi\in S_N$, with cyclic indexing $\pi_{N+1}=\pi_1$. The tour length is</p>
 
-<p>[
-L(\pi; X^{(N)}) = \sum_{t=1}^{N} |x_{\pi_t}-x_{\pi_{t+1}}|_2.
-]</p>
+\[L(\pi; X^{(N)}) = \sum_{t=1}^{N} \|x_{\pi_t}-x_{\pi_{t+1}}\|_2.\]
 
 <p>In NI, we also define a <em>move operator</em> $\Phi$ (e.g., 2-opt), and an action $a_t$ that selects a particular move. Starting from an initial tour $\pi^{(0)}$, NI produces a sequence</p>
 
-<p>[
-\pi^{(t+1)} = \Phi(\pi^{(t)}, a_t),\qquad t=0,1,\ldots,T-1.
-]</p>
+\[\pi^{(t+1)} = \Phi(\pi^{(t)}, a_t),\qquad t=0,1,\ldots,T-1.\]
 
 <p>Given a step budget $T$, the goal is to quickly drive the tour cost down.</p>
 
@@ -302,9 +235,7 @@ L(\pi; X^{(N)}) = \sum_{t=1}^{N} |x_{\pi_t}-x_{\pi_{t+1}}|_2.
 
 <p>So even if your architecture can technically process any $N$, the model still faces a distribution shift:</p>
 
-<p>[
-s \sim \mathcal{D}_N \quad \text{changes with } N.
-]</p>
+\[s \sim \mathcal{D}_N \quad \text{changes with } N.\]
 
 <h3 id="3-the-horizon-grows">3) The horizon grows</h3>
 
@@ -322,23 +253,17 @@ s \sim \mathcal{D}_N \quad \text{changes with } N.
 
 <p>Let $s=(X^{(N)},\pi)$ be the state. For a first action $a_1$, define the 2-step lookahead value</p>
 
-<p>[
-Q^{(2)}(s,a_1) = \min_{a_2\in \mathcal{A}_N(\Phi(\pi,a_1))}
-L\big(\Phi(\Phi(\pi,a_1),a_2); X^{(N)}\big).
-]</p>
+\[Q^{(2)}(s,a_1) = \min_{a_2\in \mathcal{A}_N(\Phi(\pi,a_1))}
+L\big(\Phi(\Phi(\pi,a_1),a_2); X^{(N)}\big).\]
 
 <p>Then the teacher action is</p>
 
-<p>[
-a^\star(s) = \arg\min_{a_1\in\mathcal{A}_N(\pi)} Q^{(2)}(s,a_1).
-]</p>
+\[a^\star(s) = \arg\min_{a_1\in\mathcal{A}_N(\pi)} Q^{(2)}(s,a_1).\]
 
 <p>Your IL objective becomes</p>
 
-<p>[
-\min_\theta\; \mathbb{E}<em>{s\sim\mathcal{D}}
-\big[ -\log \pi</em>\theta(a^\star(s)\mid s) \big].
-]</p>
+\[\min_\theta\; \mathbb{E}_{s\sim\mathcal{D}}
+\big[ -\log \pi_\theta(a^\star(s)\mid s) \big].\]
 
 <h3 id="a-simple-setup-move-example">A simple “setup move” example</h3>
 
@@ -355,11 +280,9 @@ So 2-step IL teaches “planning” even in a local-search setting.</p>
 
 <p>A useful tweak is <strong>soft imitation</strong>:</p>
 
-<p>[
-p_T(a\mid s)\propto \exp!\big(-Q^{(2)}(s,a)/\tau\big),
+\[p_T(a\mid s)\propto \exp\!\big(-Q^{(2)}(s,a)/\tau\big),
 \qquad
-\min_\theta\; \mathbb{E}\big[ \mathrm{KL}(p_T(\cdot\mid s)\,|\,\pi_\theta(\cdot\mid s))\big].
-]</p>
+\min_\theta\; \mathbb{E}\big[ \mathrm{KL}(p_T(\cdot\mid s)\,\|\,\pi_\theta(\cdot\mid s))\big].\]
 
 <blockquote>
   <p><strong>Why this matters for scale:</strong> the number of near-tied 2-step choices tends to increase with $N$, so one-hot labels become brittle. A soft teacher distribution can stabilize training.</p>
@@ -375,9 +298,7 @@ p_T(a\mid s)\propto \exp!\big(-Q^{(2)}(s,a)/\tau\big),
 
 <p>For each $N$, plot best-so-far tour length versus steps $t$, normalized by a strong reference:</p>
 
-<p>[
-\text{gap}(t) = \frac{L(\pi^{(t)}) - L_{\text{ref}}}{L_{\text{ref}}}\times 100\%.
-]</p>
+\[\text{gap}(t) = \frac{L(\pi^{(t)}) - L_{\text{ref}}}{L_{\text{ref}}}\times 100\%.\]
 
 <p>The reference can be a classical solver/heuristic (or best-known on synthetic benchmarks).</p>
 
