@@ -10,10 +10,8 @@ authors:
   - name: Andoni Irazusta Garmendia
     url: "https://theleprechaun25.github.io/"
     affiliations:
-      name: University of the Basque Country (UPV/EHU)
-
+      - name: University of the Basque Country (UPV/EHU)
 bibliography: 2026-02-17-scale-generalization-problem.bib
-
 toc:
   - name: Neural Improvement for the TSP
   - name: Why scale generalization is hard
@@ -21,77 +19,6 @@ toc:
   - name: Starting positions, symmetries, and label noise
   - name: What to measure and how to stress-test
   - name: References
-
-_styles: >
-  .note {
-    padding: 12px 14px;
-    border-radius: 14px;
-    border: 1px solid rgba(0,0,0,.12);
-    background: rgba(0,0,0,.03);
-    margin: 14px 0;
-  }
-  html[data-theme='dark'] .note{
-    border: 1px solid rgba(255,255,255,.12);
-    background: rgba(255,255,255,.05);
-  }
-  .anim-wrap{
-    border-radius: 18px;
-    border: 1px solid rgba(0,0,0,.12);
-    overflow: hidden;
-    background: white;
-  }
-  html[data-theme='dark'] .anim-wrap{
-    border: 1px solid rgba(255,255,255,.12);
-    background: rgba(20,20,20,.55);
-  }
-  .anim-toolbar{
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
-    align-items:center;
-    padding: 10px 12px;
-    border-bottom: 1px solid rgba(0,0,0,.08);
-    background: rgba(0,0,0,.02);
-  }
-  html[data-theme='dark'] .anim-toolbar{
-    border-bottom: 1px solid rgba(255,255,255,.10);
-    background: rgba(255,255,255,.04);
-  }
-  .anim-toolbar button{
-    padding: 7px 10px;
-    border-radius: 12px;
-    border: 1px solid rgba(0,0,0,.18);
-    background: rgba(255,255,255,.7);
-    cursor:pointer;
-    font-weight: 600;
-  }
-  html[data-theme='dark'] .anim-toolbar button{
-    border: 1px solid rgba(255,255,255,.16);
-    background: rgba(0,0,0,.25);
-    color: rgba(255,255,255,.92);
-  }
-  .anim-toolbar input[type="range"]{
-    width: 150px;
-  }
-  .anim-toolbar .pill{
-    padding: 6px 10px;
-    border-radius: 999px;
-    border: 1px solid rgba(0,0,0,.12);
-    background: rgba(0,0,0,.03);
-    font-size: 13px;
-  }
-  html[data-theme='dark'] .anim-toolbar .pill{
-    border: 1px solid rgba(255,255,255,.12);
-    background: rgba(255,255,255,.05);
-  }
-  .anim-canvas{
-    width:100%;
-    height: 520px;
-    display:block;
-  }
-  @media (max-width: 680px){
-    .anim-canvas{ height: 420px; }
-  }
 ---
 
 ## Neural Improvement for the TSP
@@ -102,21 +29,21 @@ The Traveling Salesperson Problem (TSP) will be our playground to explain NI.
 
 A TSP instance with $N$ cities is a set of coordinates
 
-\[
+$$
 X^{(N)} = (x_1,\ldots,x_N)\in \mathbb{R}^{N\times 2}.
-\]
+$$
 
 A tour is a Hamiltonian cycle, commonly represented as a permutation $\pi\in S_N$, with cyclic indexing $\pi_{N+1}=\pi_1$. The tour length is
 
-\[
+$$
 L(\pi; X^{(N)}) = \sum_{t=1}^{N} \|x_{\pi_t}-x_{\pi_{t+1}}\|_2.
-\]
+$$
 
 In NI, we also define a *move operator* $\Phi$ (e.g., 2-opt), and an action $a_t$ that selects a particular move. Starting from an initial tour $\pi^{(0)}$, NI produces a sequence
 
-\[
+$$
 \pi^{(t+1)} = \Phi(\pi^{(t)}, a_t),\qquad t=0,1,\ldots,T-1.
-\]
+$$
 
 Given a step budget $T$, the goal is to quickly drive the tour cost down.
 
@@ -140,9 +67,9 @@ A random tour at $N=50$ looks different than at $N=500$. So does a “partially 
 
 So even if your architecture can technically process any $N$, the model still faces a distribution shift:
 
-\[
+$$
 s \sim \mathcal{D}_N \quad \text{changes with } N.
-\]
+$$
 
 ### 3) The horizon grows
 
@@ -160,23 +87,23 @@ That motivates a **k-step optimal teacher**. Let's use **k=2** to start.
 
 Let $s=(X^{(N)},\pi)$ be the state. For a first action $a_1$, define the 2-step lookahead value
 
-\[
+$$
 Q^{(2)}(s,a_1) = \min_{a_2\in \mathcal{A}_N(\Phi(\pi,a_1))}
 L\big(\Phi(\Phi(\pi,a_1),a_2); X^{(N)}\big).
-\]
+$$
 
 Then the teacher action is
 
-\[
+$$
 a^\star(s) = \arg\min_{a_1\in\mathcal{A}_N(\pi)} Q^{(2)}(s,a_1).
-\]
+$$
 
 Your IL objective becomes
 
-\[
+$$
 \min_\theta\; \mathbb{E}_{s\sim\mathcal{D}}
 \big[ -\log \pi_\theta(a^\star(s)\mid s) \big].
-\]
+$$
 
 ### A simple “setup move” example
 
@@ -191,11 +118,11 @@ So 2-step IL teaches “planning” even in a local-search setting.
 
 A useful tweak is **soft imitation**:
 
-\[
+$$
 p_T(a\mid s)\propto \exp\!\big(-Q^{(2)}(s,a)/\tau\big),
 \qquad
 \min_\theta\; \mathbb{E}\big[ \mathrm{KL}(p_T(\cdot\mid s)\,\|\,\pi_\theta(\cdot\mid s))\big].
-\]
+$$
 
 > **Why this matters for scale:** the number of near-tied 2-step choices tends to increase with $N$, so one-hot labels become brittle. A soft teacher distribution can stabilize training.
 
@@ -209,9 +136,9 @@ If your goal is *cross-scale generalization*, you want evaluations that separate
 
 For each $N$, plot best-so-far tour length versus steps $t$, normalized by a strong reference:
 
-\[
+$$
 \text{gap}(t) = \frac{L(\pi^{(t)}) - L_{\text{ref}}}{L_{\text{ref}}}\times 100\%.
-\]
+$$
 
 The reference can be a classical solver/heuristic (or best-known on synthetic benchmarks).
 
