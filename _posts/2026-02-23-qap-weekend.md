@@ -142,11 +142,17 @@ I’ll use the following tools:
 I’ll split the project into explicit stages:
 
 1) Literature scan and baseline selection
+
 2) Where current neural approaches struggle on QAP (and why)
+
 3) Method proposal (model + training/inference recipe)
+
 4) Implementation plan and coding
+
 5) Experiments + evaluation protocol
+
 6) Results, ablations, and failure modes
+
 7) Write-up
 
 ---
@@ -184,7 +190,7 @@ $$
 
 ---
 
-Next I asked the LLM to do what I’d normally do first: a fast literature scan, focused specifically on **neural / deep learning methods for QAP**.
+Next, I asked the LLM to do what I’d normally do first: a fast literature scan, focused specifically on **neural / deep learning methods for QAP**.
 
 **Q.** *Give me a concise literature review of deep learning approaches for the Quadratic Assignment Problem (QAP): main method families, key papers, benchmarks/baselines, and the most promising gaps to explore.*
 
@@ -192,7 +198,7 @@ Next I asked the LLM to do what I’d normally do first: a fast literature scan,
 
 After a fairly broad scan (24 minutes, 277 sources), it returned a structured summary and a handful of recent papers that were new to me.
 
-<div class="table-wrapper">
+<div class="table-wrapper" markdown="1">
 
 | Paper / year | Method family | Core modeling choice | Training paradigm and loss | Data / benchmark | Sizes reported | Performance vs baselines (as reported) | Key limitations (as reported/visible) |
 |---|---|---|---|---|---|---|---|
@@ -210,7 +216,7 @@ After a fairly broad scan (24 minutes, 277 sources), it returned a structured su
 
 ## Stage 2: Gaps within Neural QAP
 
-The literature report came back with the usual “checkbox gaps”: scalability beyond small $n$, generalization to QAPLIB, hybridization with exact solvers, lack of standardized benchmarks, and a *“theory and guarantees”* bucket (help!). All true—but also a bit too generic.
+The literature report came back with the usual “checkbox gaps”: scalability beyond small $n$, generalization to QAPLIB, hybridization with exact solvers, lack of standardized benchmarks, and a *“theory and guarantees”* bucket (help!). All true, but also a bit too generic.
 
 What I *did* take seriously is the evaluation angle. 
 Seems like QAP papers often look hard to compare because each one uses different evaluation protocols: different instance generators, different time budgets, different baselines. 
@@ -221,15 +227,19 @@ My point is to explore something **algorithmic**: a representation choice, an in
 
 So I asked the LLM again:
 
-**Q.** *Ignore generic “future work” (scale, more benchmarks, theory). Based on existing neural QAP methods, list 5–8 specific, mechanism-level gaps and a concrete improvement for each.
+
+<b>Q.</b> <i>Ignore generic “future work” (scale, more benchmarks, theory). Based on existing neural QAP methods, list 5–8 specific, mechanism-level gaps and a concrete improvement for each.
+
 You can propose ideas like:
 - representation of (F, D, permutation/incumbent),
 - inference/search procedure,
 - learning pipeline/objective aligned with QAP structure.
-For each item give:
-- Failure mode → Fix → Minimal experiment (dataset/baseline/metric/budget).*
 
-It came with a bunch of interesting gaps, here the most interesting ones in my opinion:
+For each item give:
+- Failure mode → Fix → Minimal experiment (dataset/baseline/metric/budget).
+</i>
+
+**A.** It came with a bunch of interesting gaps, here the most interesting ones in my opinion:
 
 - **Association-graph materialization blows up memory.** Methods that build the full association graph quickly hit GPU-memory limits as $n$ grows, making large QAPLIB instances impractical.
 
