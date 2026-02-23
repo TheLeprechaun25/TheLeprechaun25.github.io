@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="https://theleprechaun25.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://theleprechaun25.github.io/" rel="alternate" type="text/html" hreflang="en" /><updated>2026-02-23T21:10:31+00:00</updated><id>https://theleprechaun25.github.io/feed.xml</id><title type="html">Andoni Irazusta Garmendia</title><subtitle>Personal Page of Andoni Irazusta Garmendia.
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="https://theleprechaun25.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://theleprechaun25.github.io/" rel="alternate" type="text/html" hreflang="en" /><updated>2026-02-23T21:18:21+00:00</updated><id>https://theleprechaun25.github.io/feed.xml</id><title type="html">Andoni Irazusta Garmendia</title><subtitle>Personal Page of Andoni Irazusta Garmendia.
 </subtitle><entry><title type="html">Can a Weekend + LLMs Produce a New Neural Solver for the Quadratic Assignment Problem?</title><link href="https://theleprechaun25.github.io/blog/2026/qap-weekend/" rel="alternate" type="text/html" title="Can a Weekend + LLMs Produce a New Neural Solver for the Quadratic Assignment Problem?" /><published>2026-02-23T00:00:00+00:00</published><updated>2026-02-23T00:00:00+00:00</updated><id>https://theleprechaun25.github.io/blog/2026/qap-weekend</id><content type="html" xml:base="https://theleprechaun25.github.io/blog/2026/qap-weekend/"><![CDATA[<h2 id="motivation">Motivation</h2>
 
 <p>LLMs have gotten surprisingly competent at the core task of research projects: reading papers, writing code, and turning messy thoughts into structured text. 
@@ -44,13 +44,19 @@ We’ll find out.</p>
 
 <p>I’ll split the project into explicit stages:</p>
 
-<p>1) Literature scan and baseline selection
-2) Where current neural approaches struggle on QAP (and why)
-3) Method proposal (model + training/inference recipe)
-4) Implementation plan and coding
-5) Experiments + evaluation protocol
-6) Results, ablations, and failure modes
-7) Write-up</p>
+<p>1) Literature scan and baseline selection</p>
+
+<p>2) Where current neural approaches struggle on QAP (and why)</p>
+
+<p>3) Method proposal (model + training/inference recipe)</p>
+
+<p>4) Implementation plan and coding</p>
+
+<p>5) Experiments + evaluation protocol</p>
+
+<p>6) Results, ablations, and failure modes</p>
+
+<p>7) Write-up</p>
 
 <hr />
 
@@ -83,7 +89,7 @@ It’s been a while, so I simply asked the LLM for a quick refresh.</p>
 
 <hr />
 
-<p>Next I asked the LLM to do what I’d normally do first: a fast literature scan, focused specifically on <strong>neural / deep learning methods for QAP</strong>.</p>
+<p>Next, I asked the LLM to do what I’d normally do first: a fast literature scan, focused specifically on <strong>neural / deep learning methods for QAP</strong>.</p>
 
 <p><strong>Q.</strong> <em>Give me a concise literature review of deep learning approaches for the Quadratic Assignment Problem (QAP): main method families, key papers, benchmarks/baselines, and the most promising gaps to explore.</em></p>
 
@@ -93,15 +99,92 @@ It’s been a while, so I simply asked the LLM for a quick refresh.</p>
 
 <div class="table-wrapper">
 
-| Paper / year | Method family | Core modeling choice | Training paradigm and loss | Data / benchmark | Sizes reported | Performance vs baselines (as reported) | Key limitations (as reported/visible) |
-|---|---|---|---|---|---|---|---|
-| Revised note on learning QAP with GNNs (2018) [@nowak2018revised_qap_gnn] | Supervised learning + GNN | Siamese GNN embeddings; outer product to score matches; row/col softmax to approximate permutation | Supervised planted-solution training; cross-entropy on recovered permutation | Synthetic Erdős–Rényi / random regular graph alignment | Example: $n=50$ | High recovery rates across noise in tested regimes; outperforms some relaxation baselines on random regular graphs in their experiments | Focused on planted/random-graph regimes; not a direct QAPLIB facility-layout evaluation; requires supervised targets from the generator |
-| Neural graph matching network for Lawler QAP (2019; TPAMI 2022) [@wang2019ngm_lawler_qap; @wang2022ngm_tpami] | GNN solver + differentiable projection | Association graph embedding (can be $O(n^2)$ nodes); projection to a doubly-stochastic solution; sampling to explore feasible space | Supervised (cross-entropy) for labeled matching; unsupervised objective-driven training for QAPLIB setting | QAPLIB + vision graph matching benchmarks (in the same pipeline) | QAPLIB sizes up to 256 mentioned; excludes the hardest tai256c due to memory burden | Reports best-performing counts on QAPLIB (e.g., best on 72/133 instances with heavy sampling in their table) | Association-graph scaling and memory bottlenecks; evaluation uses normalized scoring rather than uniform optimality-gap reporting |
-| Deep RL for QAP with double pointer network (2023) [@bagga2023drl_qap_double_pointer] | RL (constructive) | Alternating pointer decoding over locations/facilities with GRUs + attention; location encoding + facility GCN embeds | Actor–critic training; evaluated as % gap vs a swap heuristic baseline | Synthetic symmetric Koopmans–Beckmann instances with Euclidean locations | $n=10,20$ | Average gap ~7–9% vs swap heuristic; faster than a time-limited MILP solver in their setup | Small sizes only; comparison target is a heuristic baseline; unclear scaling to $n\ge 50$ |
-| Solution-aware transformer learn-to-improve (ICML 2024) [@tan2024sawt_qap] | RL (learn-to-improve) + attention | Separate facility/location encoding; “solution-aware” attention uses incumbent-dependent matrix; proposes swap actions | Policy-gradient with value baseline + entropy; reward tied to improvement vs best-so-far | Synthetic QAP10/20/50/100 + QAPLIB generalization | Up to $n=100$ synthetic; QAPLIB includes up to $n=256$ | Synthetic: near-zero gaps at higher search steps; QAPLIB: mean gap reported as 26.8% with per-instance time ~12.11s | Large distribution shift across QAPLIB categories; needs better cross-category generalization |
-| Unsupervised learning for QAP as tabu-search initialization (2025) [@min2025ul_qap_plume] | Unsupervised + hybrid heuristic | Permutation-equivariant network outputs logits; entropic relaxation gives soft permutation; discretize then tabu search | Unsupervised objective; no solved-instance labels; evaluated by tabu-search improvement | Synthetic instances across sizes/densities | $n=100,200$ | Improves over random initialization and improves downstream tabu-search final cost under multiple budgets | Gains after strong tabu can be modest; trained per regime; not benchmarked on QAPLIB |
-| Bi-level differentiable framework (2025) [@shi2025biqap] | Differentiable relaxation + bi-level | Network modifies an instance; inner solver uses entropic relaxation + iterative normalization; discretize | Bi-level training: outer loss is original QAP objective; inner solved via differentiable layer; multi-sampling | Case studies incl. QAPLIB + large synthetic | Reports up to sizes like 500–1000 in a “large random dataset” | QAPLIB: best on 92/134 instances; strong on many instances vs a lifted-relaxation baseline | Normalized scoring + per-category training; cross-category transfer and consistent gap reporting unclear |
-| Warm-started MCMC finetuning + cross-graph attention (OpenReview 2026) [@pan2026plma_qap_mcmc] | Learning-to-optimize + hybrid search | Cross-graph attention heatmap; additive energy model enables fast 2-swap proposal scoring; warm-start refinement | Pretrain then inference-time adaptation; evaluates runtime–gap tradeoffs | Synthetic + QAPLIB + Taixxeyy | Synthetic up to at least $n=500$ | QAPLIB: avg gap ~0.10% with faster time than a strong tabu baseline (as reported) | Sensitive to inference-time budget + time accounting; depends on reference-solution definitions |
+  <table>
+    <thead>
+      <tr>
+        <th>Paper / year</th>
+        <th>Method family</th>
+        <th>Core modeling choice</th>
+        <th>Training paradigm and loss</th>
+        <th>Data / benchmark</th>
+        <th>Sizes reported</th>
+        <th>Performance vs baselines (as reported)</th>
+        <th>Key limitations (as reported/visible)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Revised note on learning QAP with GNNs (2018) [@nowak2018revised_qap_gnn]</td>
+        <td>Supervised learning + GNN</td>
+        <td>Siamese GNN embeddings; outer product to score matches; row/col softmax to approximate permutation</td>
+        <td>Supervised planted-solution training; cross-entropy on recovered permutation</td>
+        <td>Synthetic Erdős–Rényi / random regular graph alignment</td>
+        <td>Example: $n=50$</td>
+        <td>High recovery rates across noise in tested regimes; outperforms some relaxation baselines on random regular graphs in their experiments</td>
+        <td>Focused on planted/random-graph regimes; not a direct QAPLIB facility-layout evaluation; requires supervised targets from the generator</td>
+      </tr>
+      <tr>
+        <td>Neural graph matching network for Lawler QAP (2019; TPAMI 2022) [@wang2019ngm_lawler_qap; @wang2022ngm_tpami]</td>
+        <td>GNN solver + differentiable projection</td>
+        <td>Association graph embedding (can be $O(n^2)$ nodes); projection to a doubly-stochastic solution; sampling to explore feasible space</td>
+        <td>Supervised (cross-entropy) for labeled matching; unsupervised objective-driven training for QAPLIB setting</td>
+        <td>QAPLIB + vision graph matching benchmarks (in the same pipeline)</td>
+        <td>QAPLIB sizes up to 256 mentioned; excludes the hardest tai256c due to memory burden</td>
+        <td>Reports best-performing counts on QAPLIB (e.g., best on 72/133 instances with heavy sampling in their table)</td>
+        <td>Association-graph scaling and memory bottlenecks; evaluation uses normalized scoring rather than uniform optimality-gap reporting</td>
+      </tr>
+      <tr>
+        <td>Deep RL for QAP with double pointer network (2023) [@bagga2023drl_qap_double_pointer]</td>
+        <td>RL (constructive)</td>
+        <td>Alternating pointer decoding over locations/facilities with GRUs + attention; location encoding + facility GCN embeds</td>
+        <td>Actor–critic training; evaluated as % gap vs a swap heuristic baseline</td>
+        <td>Synthetic symmetric Koopmans–Beckmann instances with Euclidean locations</td>
+        <td>$n=10,20$</td>
+        <td>Average gap ~7–9% vs swap heuristic; faster than a time-limited MILP solver in their setup</td>
+        <td>Small sizes only; comparison target is a heuristic baseline; unclear scaling to $n\ge 50$</td>
+      </tr>
+      <tr>
+        <td>Solution-aware transformer learn-to-improve (ICML 2024) [@tan2024sawt_qap]</td>
+        <td>RL (learn-to-improve) + attention</td>
+        <td>Separate facility/location encoding; “solution-aware” attention uses incumbent-dependent matrix; proposes swap actions</td>
+        <td>Policy-gradient with value baseline + entropy; reward tied to improvement vs best-so-far</td>
+        <td>Synthetic QAP10/20/50/100 + QAPLIB generalization</td>
+        <td>Up to $n=100$ synthetic; QAPLIB includes up to $n=256$</td>
+        <td>Synthetic: near-zero gaps at higher search steps; QAPLIB: mean gap reported as 26.8% with per-instance time ~12.11s</td>
+        <td>Large distribution shift across QAPLIB categories; needs better cross-category generalization</td>
+      </tr>
+      <tr>
+        <td>Unsupervised learning for QAP as tabu-search initialization (2025) [@min2025ul_qap_plume]</td>
+        <td>Unsupervised + hybrid heuristic</td>
+        <td>Permutation-equivariant network outputs logits; entropic relaxation gives soft permutation; discretize then tabu search</td>
+        <td>Unsupervised objective; no solved-instance labels; evaluated by tabu-search improvement</td>
+        <td>Synthetic instances across sizes/densities</td>
+        <td>$n=100,200$</td>
+        <td>Improves over random initialization and improves downstream tabu-search final cost under multiple budgets</td>
+        <td>Gains after strong tabu can be modest; trained per regime; not benchmarked on QAPLIB</td>
+      </tr>
+      <tr>
+        <td>Bi-level differentiable framework (2025) [@shi2025biqap]</td>
+        <td>Differentiable relaxation + bi-level</td>
+        <td>Network modifies an instance; inner solver uses entropic relaxation + iterative normalization; discretize</td>
+        <td>Bi-level training: outer loss is original QAP objective; inner solved via differentiable layer; multi-sampling</td>
+        <td>Case studies incl. QAPLIB + large synthetic</td>
+        <td>Reports up to sizes like 500–1000 in a “large random dataset”</td>
+        <td>QAPLIB: best on 92/134 instances; strong on many instances vs a lifted-relaxation baseline</td>
+        <td>Normalized scoring + per-category training; cross-category transfer and consistent gap reporting unclear</td>
+      </tr>
+      <tr>
+        <td>Warm-started MCMC finetuning + cross-graph attention (OpenReview 2026) [@pan2026plma_qap_mcmc]</td>
+        <td>Learning-to-optimize + hybrid search</td>
+        <td>Cross-graph attention heatmap; additive energy model enables fast 2-swap proposal scoring; warm-start refinement</td>
+        <td>Pretrain then inference-time adaptation; evaluates runtime–gap tradeoffs</td>
+        <td>Synthetic + QAPLIB + Taixxeyy</td>
+        <td>Synthetic up to at least $n=500$</td>
+        <td>QAPLIB: avg gap ~0.10% with faster time than a strong tabu baseline (as reported)</td>
+        <td>Sensitive to inference-time budget + time accounting; depends on reference-solution definitions</td>
+      </tr>
+    </tbody>
+  </table>
 
 </div>
 
@@ -109,7 +192,7 @@ It’s been a while, so I simply asked the LLM for a quick refresh.</p>
 
 <h2 id="stage-2-gaps-within-neural-qap">Stage 2: Gaps within Neural QAP</h2>
 
-<p>The literature report came back with the usual “checkbox gaps”: scalability beyond small $n$, generalization to QAPLIB, hybridization with exact solvers, lack of standardized benchmarks, and a <em>“theory and guarantees”</em> bucket (help!). All true—but also a bit too generic.</p>
+<p>The literature report came back with the usual “checkbox gaps”: scalability beyond small $n$, generalization to QAPLIB, hybridization with exact solvers, lack of standardized benchmarks, and a <em>“theory and guarantees”</em> bucket (help!). All true, but also a bit too generic.</p>
 
 <p>What I <em>did</em> take seriously is the evaluation angle. 
 Seems like QAP papers often look hard to compare because each one uses different evaluation protocols: different instance generators, different time budgets, different baselines. 
@@ -120,17 +203,22 @@ My point is to explore something <strong>algorithmic</strong>: a representation 
 
 <p>So I asked the LLM again:</p>
 
-<p><strong>Q.</strong> *Ignore generic “future work” (scale, more benchmarks, theory). Based on existing neural QAP methods, list 5–8 specific, mechanism-level gaps and a concrete improvement for each.
-You can propose ideas like:</p>
+<p><b>Q.</b> <i>Ignore generic “future work” (scale, more benchmarks, theory). Based on existing neural QAP methods, list 5–8 specific, mechanism-level gaps and a concrete improvement for each.</i></p>
+
+<p>You can propose ideas like:</p>
 <ul>
   <li>representation of (F, D, permutation/incumbent),</li>
   <li>inference/search procedure,</li>
-  <li>learning pipeline/objective aligned with QAP structure.
-For each item give:</li>
-  <li>Failure mode → Fix → Minimal experiment (dataset/baseline/metric/budget).*</li>
+  <li>learning pipeline/objective aligned with QAP structure.</li>
 </ul>
 
-<p>It came with a bunch of interesting gaps, here the most interesting ones in my opinion:</p>
+<p>For each item give:</p>
+<ul>
+  <li>Failure mode → Fix → Minimal experiment (dataset/baseline/metric/budget).
+&lt;/i&gt;</li>
+</ul>
+
+<p><strong>A.</strong> It came with a bunch of interesting gaps, here the most interesting ones in my opinion:</p>
 
 <ul>
   <li>
