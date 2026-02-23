@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="https://theleprechaun25.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://theleprechaun25.github.io/" rel="alternate" type="text/html" hreflang="en" /><updated>2026-02-23T21:18:21+00:00</updated><id>https://theleprechaun25.github.io/feed.xml</id><title type="html">Andoni Irazusta Garmendia</title><subtitle>Personal Page of Andoni Irazusta Garmendia.
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="https://theleprechaun25.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://theleprechaun25.github.io/" rel="alternate" type="text/html" hreflang="en" /><updated>2026-02-23T22:08:30+00:00</updated><id>https://theleprechaun25.github.io/feed.xml</id><title type="html">Andoni Irazusta Garmendia</title><subtitle>Personal Page of Andoni Irazusta Garmendia.
 </subtitle><entry><title type="html">Can a Weekend + LLMs Produce a New Neural Solver for the Quadratic Assignment Problem?</title><link href="https://theleprechaun25.github.io/blog/2026/qap-weekend/" rel="alternate" type="text/html" title="Can a Weekend + LLMs Produce a New Neural Solver for the Quadratic Assignment Problem?" /><published>2026-02-23T00:00:00+00:00</published><updated>2026-02-23T00:00:00+00:00</updated><id>https://theleprechaun25.github.io/blog/2026/qap-weekend</id><content type="html" xml:base="https://theleprechaun25.github.io/blog/2026/qap-weekend/"><![CDATA[<h2 id="motivation">Motivation</h2>
 
 <p>LLMs have gotten surprisingly competent at the core task of research projects: reading papers, writing code, and turning messy thoughts into structured text. 
@@ -114,7 +114,7 @@ It’s been a while, so I simply asked the LLM for a quick refresh.</p>
     </thead>
     <tbody>
       <tr>
-        <td>Revised note on learning QAP with GNNs (2018) [@nowak2018revised_qap_gnn]</td>
+        <td>Revised note on learning QAP with GNNs (2018) <d-cite key="nowak2018revised_qap_gnn"></d-cite></td>
         <td>Supervised learning + GNN</td>
         <td>Siamese GNN embeddings; outer product to score matches; row/col softmax to approximate permutation</td>
         <td>Supervised planted-solution training; cross-entropy on recovered permutation</td>
@@ -124,7 +124,7 @@ It’s been a while, so I simply asked the LLM for a quick refresh.</p>
         <td>Focused on planted/random-graph regimes; not a direct QAPLIB facility-layout evaluation; requires supervised targets from the generator</td>
       </tr>
       <tr>
-        <td>Neural graph matching network for Lawler QAP (2019; TPAMI 2022) [@wang2019ngm_lawler_qap; @wang2022ngm_tpami]</td>
+        <td>Neural graph matching network for Lawler QAP (2019; TPAMI 2022) <d-cite key="wang2019ngm_lawler_qap,wang2022ngm_tpami"></d-cite></td>
         <td>GNN solver + differentiable projection</td>
         <td>Association graph embedding (can be $O(n^2)$ nodes); projection to a doubly-stochastic solution; sampling to explore feasible space</td>
         <td>Supervised (cross-entropy) for labeled matching; unsupervised objective-driven training for QAPLIB setting</td>
@@ -134,7 +134,7 @@ It’s been a while, so I simply asked the LLM for a quick refresh.</p>
         <td>Association-graph scaling and memory bottlenecks; evaluation uses normalized scoring rather than uniform optimality-gap reporting</td>
       </tr>
       <tr>
-        <td>Deep RL for QAP with double pointer network (2023) [@bagga2023drl_qap_double_pointer]</td>
+        <td>Deep RL for QAP with double pointer network (2023) <d-cite key="bagga2023drl_qap_double_pointer"></d-cite></td>
         <td>RL (constructive)</td>
         <td>Alternating pointer decoding over locations/facilities with GRUs + attention; location encoding + facility GCN embeds</td>
         <td>Actor–critic training; evaluated as % gap vs a swap heuristic baseline</td>
@@ -144,7 +144,7 @@ It’s been a while, so I simply asked the LLM for a quick refresh.</p>
         <td>Small sizes only; comparison target is a heuristic baseline; unclear scaling to $n\ge 50$</td>
       </tr>
       <tr>
-        <td>Solution-aware transformer learn-to-improve (ICML 2024) [@tan2024sawt_qap]</td>
+        <td>Solution-aware transformer learn-to-improve (ICML 2024) <d-cite key="tan2024sawt_qap"></d-cite></td>
         <td>RL (learn-to-improve) + attention</td>
         <td>Separate facility/location encoding; “solution-aware” attention uses incumbent-dependent matrix; proposes swap actions</td>
         <td>Policy-gradient with value baseline + entropy; reward tied to improvement vs best-so-far</td>
@@ -154,7 +154,7 @@ It’s been a while, so I simply asked the LLM for a quick refresh.</p>
         <td>Large distribution shift across QAPLIB categories; needs better cross-category generalization</td>
       </tr>
       <tr>
-        <td>Unsupervised learning for QAP as tabu-search initialization (2025) [@min2025ul_qap_plume]</td>
+        <td>Unsupervised learning for QAP as tabu-search initialization (2025) <d-cite key="min2025ul_qap_plume"></d-cite></td>
         <td>Unsupervised + hybrid heuristic</td>
         <td>Permutation-equivariant network outputs logits; entropic relaxation gives soft permutation; discretize then tabu search</td>
         <td>Unsupervised objective; no solved-instance labels; evaluated by tabu-search improvement</td>
@@ -164,7 +164,7 @@ It’s been a while, so I simply asked the LLM for a quick refresh.</p>
         <td>Gains after strong tabu can be modest; trained per regime; not benchmarked on QAPLIB</td>
       </tr>
       <tr>
-        <td>Bi-level differentiable framework (2025) [@shi2025biqap]</td>
+        <td>Bi-level differentiable framework (2025) <d-cite key="shi2025biqap"></d-cite></td>
         <td>Differentiable relaxation + bi-level</td>
         <td>Network modifies an instance; inner solver uses entropic relaxation + iterative normalization; discretize</td>
         <td>Bi-level training: outer loss is original QAP objective; inner solved via differentiable layer; multi-sampling</td>
@@ -174,7 +174,7 @@ It’s been a while, so I simply asked the LLM for a quick refresh.</p>
         <td>Normalized scoring + per-category training; cross-category transfer and consistent gap reporting unclear</td>
       </tr>
       <tr>
-        <td>Warm-started MCMC finetuning + cross-graph attention (OpenReview 2026) [@pan2026plma_qap_mcmc]</td>
+        <td>Warm-started MCMC finetuning + cross-graph attention (OpenReview 2026) <d-cite key="pan2026plma_qap_mcmc"></d-cite></td>
         <td>Learning-to-optimize + hybrid search</td>
         <td>Cross-graph attention heatmap; additive energy model enables fast 2-swap proposal scoring; warm-start refinement</td>
         <td>Pretrain then inference-time adaptation; evaluates runtime–gap tradeoffs</td>
