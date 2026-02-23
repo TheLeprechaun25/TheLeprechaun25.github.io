@@ -17,13 +17,13 @@ bibliography: 2026-02-23-qap-weekend.bib
 toc:
   - name: Motivation
   - name: Preliminaries
-  - name: Stage 1: Literature Review
-  - name: Stage 2: Gaps within Neural QAP
-  - name: Stage 3: The Proposal
-  - name: Stage 4: Implementation
-  - name: Stage 5: Experiments
-  - name: Stage 6: Results
-  - name: Stage 7: Write-up
+  - name: "Stage 1: Literature Review"
+  - name: "Stage 2: Gaps within Neural QAP"
+  - name: "Stage 3: The Proposal"
+  - name: "Stage 4: Implementation"
+  - name: "Stage 5: Experiments"
+  - name: "Stage 6: Results"
+  - name: "Stage 7: Write-up"
   - name: Wrapping up
   - name: References
 
