@@ -212,11 +212,7 @@ After a fairly broad scan (24 minutes, 277 sources), it returned a structured su
 
 </div>
 
-I need to focus on a specific family so I decided to focus on improvement based methods, since I remember Tabu Search works pretty well in the QAP.
-
-<!--
-Note that not all of them are pure neural QAP solvers (where the learned model alone produces the final permutation) <d-cite key="bagga2023drl_qap_double_pointer"></d-cite>. In contrast, several works that look very strong on QAPLIB are hybrid, where the network mainly provides a warm-start, scores moves, or shapes an energy/relaxation and a separate search/refinement (e.g., tabu/MCMC/heavy sampling + projection) accounts for a substantial part of the final improvement <d-cite key="min2025ul_qap_plume,pan2026plma_qap_mcmc,wang2019ngm_lawler_qap,wang2022ngm_tpami"></d-cite>. Since I’m interested in the intrinsic ceiling of “just neural inference,” I focus on the pure-neural setting to see how good a solution a model can output without relying on TS-style polishing.
--->
+I need to focus on a specific family so I decided to focus on improvement based methods, since I remember Tabu Search works pretty well in the QAP. To do so, the ICML 2024 work seems a good starting point <d-cite key="tan2024sawt_qap"></d-cite>.
 
 ---
 
@@ -228,7 +224,7 @@ What I *did* take seriously is the evaluation angle.
 Seems like QAP papers often look hard to compare because each one uses different evaluation protocols: different instance generators, different time budgets, different baselines. 
 So rather than jumping straight into model design, I decided to first produce a **clean benchmark + reproducible baselines**. 
 
-That said, I didn’t want this weekend to become an exercise of reviewing theoretical proofs, or re-implementing tabu search for the tenth time. 
+That said, I didn’t want this weekend to become an exercise of reviewing theoretical proofs, or re-implementing plain tabu search for the tenth time. 
 My point is to explore something **algorithmic**: a representation choice, an inference procedure, or a learning pipeline that is genuinely better aligned with QAP’s structure.
 
 So I asked the LLM again:
