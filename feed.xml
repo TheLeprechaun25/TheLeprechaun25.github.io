@@ -1,282 +1,201 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="https://theleprechaun25.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://theleprechaun25.github.io/" rel="alternate" type="text/html" hreflang="en" /><updated>2026-02-24T10:13:27+00:00</updated><id>https://theleprechaun25.github.io/feed.xml</id><title type="html">Andoni Irazusta Garmendia</title><subtitle>Personal Page of Andoni Irazusta Garmendia.
-</subtitle><entry><title type="html">Can a Weekend + LLMs Produce a New Neural Solver for the Quadratic Assignment Problem?</title><link href="https://theleprechaun25.github.io/blog/2026/qap-weekend/" rel="alternate" type="text/html" title="Can a Weekend + LLMs Produce a New Neural Solver for the Quadratic Assignment Problem?" /><published>2026-02-23T00:00:00+00:00</published><updated>2026-02-23T00:00:00+00:00</updated><id>https://theleprechaun25.github.io/blog/2026/qap-weekend</id><content type="html" xml:base="https://theleprechaun25.github.io/blog/2026/qap-weekend/"><![CDATA[<h2 id="motivation">Motivation</h2>
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="https://theleprechaun25.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://theleprechaun25.github.io/" rel="alternate" type="text/html" hreflang="en" /><updated>2026-02-24T17:30:37+00:00</updated><id>https://theleprechaun25.github.io/feed.xml</id><title type="html">Andoni Irazusta Garmendia</title><subtitle>Personal Page of Andoni Irazusta Garmendia.
+</subtitle><entry><title type="html">Can a Weekend + LLMs Produce a New Neural Solver for the Quadratic Assignment Problem?</title><link href="https://theleprechaun25.github.io/blog/2026/qap-weekend/" rel="alternate" type="text/html" title="Can a Weekend + LLMs Produce a New Neural Solver for the Quadratic Assignment Problem?" /><published>2026-02-23T00:00:00+00:00</published><updated>2026-02-23T00:00:00+00:00</updated><id>https://theleprechaun25.github.io/blog/2026/qap-weekend</id><content type="html" xml:base="https://theleprechaun25.github.io/blog/2026/qap-weekend/"><![CDATA[## Motivation
 
-<p>LLMs have gotten surprisingly competent at the core task of research projects: reading papers, writing code, and turning messy thoughts into structured text. 
-That naturally raises a question I couldn’t stop thinking about:</p>
+LLMs have gotten surprisingly competent at the core task of research projects: reading papers, writing code, and turning messy thoughts into structured text. 
+That naturally raises a question I couldn’t stop thinking about:
 
-<p>If I compress the entire research loop into a single weekend—survey → idea → implementation → experiments → write-up—how far can I get with LLMs as a co-pilot?</p>
+If I compress the entire research loop into a single weekend—survey → idea → implementation → experiments → write-up—how far can I get with LLMs as a co-pilot?
 
-<p>This post is that experiment.</p>
+This post is that experiment.
 
-<p>I’m going to try it on the Quadratic Assignment Problem (QAP): an NP-hard optimization problem that’s notoriously hard. 
+I’m going to try it on the Quadratic Assignment Problem (QAP): an NP-hard optimization problem that’s notoriously hard. 
 QAP is a “permutation” problem (like TSP), but the objective is quadratic, choices interact with each other in a way that quickly becomes globally entangled. 
-Many well-known combinatorial problems can be expressed as special cases or close relatives of QAP, including variants related to routing, matching, layout, and assignment.</p>
+Many well-known combinatorial problems can be expressed as special cases or close relatives of QAP, including variants related to routing, matching, layout, and assignment.
 
-<p>Despite that importance, QAP has received much less attention in neural combinatorial optimization than problems like TSP. 
+Despite that importance, QAP has received much less attention in neural combinatorial optimization than problems like TSP. 
 One reason is practical: QAP is harder to “package” into the neural architectures that work nicely for other permutation problems. 
 The signal you need depends on a lot of pairwise interactions, so learning good local decisions from partial context is simply harder. 
-I’ll unpack this properly later, because it’s exactly where a new model design might help.</p>
+I’ll unpack this properly later, because it’s exactly where a new model design might help.
 
-<p>So the goal is simple and slightly reckless:</p>
+So the goal is simple and slightly reckless:
 
-<p>Can I, with the help of LLMs, produce a working neural method for QAP in a single weekend? And if I can, how competitive will it be?
-We’ll find out.</p>
+Can I, with the help of LLMs, produce a working neural method for QAP in a single weekend? And if I can, how competitive will it be?
+We’ll find out.
 
-<hr />
+---
 
-<h2 id="preliminaries">Preliminaries</h2>
+## Preliminaries
 
-<p>Before diving into the sprint, a quick note on how I’ll run it.</p>
+Before diving into the sprint, a quick note on how I’ll run it.
 
-<p>This is a time-boxed project: the point is not to claim a polished, state-of-the-art solver, but to see what kind of research artifact can be produced under extreme constraints with modern LLM support. The output I’m aiming for is:</p>
-<ul>
-  <li>a working implementation,</li>
-  <li>a reproducible experimental setup,</li>
-  <li>and a coherent write-up (call it a short paper or technical report).</li>
-</ul>
+This is a time-boxed project: the point is not to claim a polished, state-of-the-art solver, but to see what kind of research artifact can be produced under extreme constraints with modern LLM support. The output I’m aiming for is:
+- a working implementation,
+- a reproducible experimental setup,
+- and a coherent write-up (call it a short paper or technical report).
 
-<p>I’ll use the following tools:</p>
-<ul>
-  <li>ChatGPT (GPT-5.2 Thinking) for quick literature scanning, problem framing, and architecture brainstorming.</li>
-  <li>Codex (gpt-5.3-codex) for coding iterations and refinements.</li>
-  <li>Prism (LLM-assisted LaTeX projects) for the final report formatting.</li>
-</ul>
+I’ll use the following tools:
+- ChatGPT (GPT-5.2 Thinking) for quick literature scanning, problem framing, and architecture brainstorming.
+- Codex (gpt-5.3-codex) for coding iterations and refinements.
+- Prism (LLM-assisted LaTeX projects) for the final report formatting.
 
-<p>I’ll split the project into explicit stages:</p>
+I’ll split the project into explicit stages:
 
-<p>1) Literature scan and baseline selection</p>
+1) Literature scan and baseline selection
 
-<p>2) Where current neural approaches struggle on QAP (and why)</p>
+2) Where current neural approaches struggle on QAP (and why)
 
-<p>3) Method proposal (model + training/inference recipe)</p>
+3) Method proposal (model + training/inference recipe)
 
-<p>4) Implementation plan and coding</p>
+4) Implementation plan and coding
 
-<p>5) Experiments + evaluation protocol</p>
+5) Experiments + evaluation protocol
 
-<p>6) Results, ablations, and failure modes</p>
+6) Results, ablations, and failure modes
 
-<p>7) Write-up</p>
+7) Write-up
 
-<hr />
+---
 
-<h2 id="stage-1-literature-review">Stage 1: Literature Review</h2>
+## Stage 1: Literature Review
 
-<p>Before reading papers, I wanted to make sure I had the QAP formulation fresh in my mind.
-It’s been a while, so I simply asked the LLM for a quick refresh.</p>
+Before reading papers, I wanted to make sure I had the QAP formulation fresh in my mind.
+It’s been a while, so I simply asked the LLM for a quick refresh.
 
-<p><strong>Q.</strong> <em>Remind me of the Quadratic Assignment Problem (QAP) formulation.</em></p>
+**Q.** *Remind me of the Quadratic Assignment Problem (QAP) formulation.*
 
-<p><strong>A.</strong> The <strong>Quadratic Assignment Problem (QAP)</strong> assigns $n$ facilities to $n$ locations. Let:</p>
+**A.** The **Quadratic Assignment Problem (QAP)** assigns $n$ facilities to $n$ locations. Let:
 
-<ul>
-  <li>$F \in \mathbb{R}^{n\times n}$ be the <strong>flow</strong> matrix, where $F_{ij}$ quantifies the interaction between facilities $i$ and $j$.</li>
-  <li>$D \in \mathbb{R}^{n\times n}$ be the <strong>distance</strong> matrix, where $D_{ab}$ is the distance between locations $a$ and $b$.</li>
-  <li>$\pi \in S_n$ be a <strong>permutation</strong>, where $\pi(i)$ is the location assigned to facility $i$.</li>
-</ul>
+- $F \in \mathbb{R}^{n\times n}$ be the **flow** matrix, where $F_{ij}$ quantifies the interaction between facilities $i$ and $j$.
+- $D \in \mathbb{R}^{n\times n}$ be the **distance** matrix, where $D_{ab}$ is the distance between locations $a$ and $b$.
+- $\pi \in S_n$ be a **permutation**, where $\pi(i)$ is the location assigned to facility $i$.
 
-<p>The QAP objective is:</p>
+The QAP objective is:
 
-\[\min_{\pi \in S_n} \ \sum_{i=1}^{n}\sum_{j=1}^{n} F_{ij}\,D_{\pi(i)\,\pi(j)}.\]
+$$
+\min_{\pi \in S_n} \ \sum_{i=1}^{n}\sum_{j=1}^{n} F_{ij}\,D_{\pi(i)\,\pi(j)}.
+$$
 
-<p>Equivalently, using a permutation matrix $P \in {0,1}^{n\times n}$ with $P_{i,\pi(i)}=1$ and the feasible set $\Pi$ of all permutation matrices:</p>
+Equivalently, using a permutation matrix $P \in \{0,1\}^{n\times n}$ with $P_{i,\pi(i)}=1$ and the feasible set $\Pi$ of all permutation matrices:
 
-\[\min_{P \in \Pi} \ \langle F,\ P D P^\top \rangle,\]
+$$
+\min_{P \in \Pi} \ \langle F,\ P D P^\top \rangle,
+$$
 
-<p>where the Frobenius inner product is:</p>
+where the Frobenius inner product is:
 
-\[\langle A,B \rangle = \sum_{i=1}^{n}\sum_{j=1}^{n} A_{ij}B_{ij}.\]
+$$
+\langle A,B \rangle = \sum_{i=1}^{n}\sum_{j=1}^{n} A_{ij}B_{ij}.
+$$
 
-<hr />
+---
 
-<p>Next, I asked the LLM to do what I’d normally do first: a fast literature scan, focused specifically on <strong>neural / deep learning methods for QAP</strong>.</p>
+Next, I asked the LLM to do what I’d normally do first: a fast literature scan, focused specifically on **neural / deep learning methods for QAP**.
 
-<p><strong>Q.</strong> <em>Give me a concise literature review of deep learning approaches for the Quadratic Assignment Problem (QAP): main method families, key papers, benchmarks/baselines, and the most promising gaps to explore.</em></p>
+**Q.** *Give me a concise literature review of deep learning approaches for the Quadratic Assignment Problem (QAP): main method families, key papers, benchmarks/baselines, and the most promising gaps to explore.*
 
-<p><strong>A.</strong> <em>(Literature review.)</em></p>
+**A.** *(Literature review.)*
 
-<p>After a fairly broad scan (24 minutes, 277 sources), it returned a structured summary and a handful of recent papers that were new to me.</p>
+After a fairly broad scan (24 minutes, 277 sources), it returned a structured summary and a handful of recent papers that were new to me.
 
-<div class="table-wrapper">
+<div class="table-wrapper" markdown="1">
 
-  <table>
-    <thead>
-      <tr>
-        <th>Paper / year</th>
-        <th>Method family</th>
-        <th>Core modeling choice</th>
-        <th>Training paradigm and loss</th>
-        <th>Data / benchmark</th>
-        <th>Sizes reported</th>
-        <th>Performance vs baselines (as reported)</th>
-        <th>Key limitations (as reported/visible)</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>Revised note on learning QAP with GNNs (2018) <d-cite key="nowak2018revised_qap_gnn"></d-cite></td>
-        <td>Supervised learning + GNN</td>
-        <td>Siamese GNN embeddings; outer product to score matches; row/col softmax to approximate permutation</td>
-        <td>Supervised planted-solution training; cross-entropy on recovered permutation</td>
-        <td>Synthetic Erdős–Rényi / random regular graph alignment</td>
-        <td>Example: $n=50$</td>
-        <td>High recovery rates across noise in tested regimes; outperforms some relaxation baselines on random regular graphs in their experiments</td>
-        <td>Focused on planted/random-graph regimes; not a direct QAPLIB facility-layout evaluation; requires supervised targets from the generator</td>
-      </tr>
-      <tr>
-        <td>Neural graph matching network for Lawler QAP (2019; TPAMI 2022) <d-cite key="wang2019ngm_lawler_qap,wang2022ngm_tpami"></d-cite></td>
-        <td>GNN solver + differentiable projection</td>
-        <td>Association graph embedding (can be $O(n^2)$ nodes); projection to a doubly-stochastic solution; sampling to explore feasible space</td>
-        <td>Supervised (cross-entropy) for labeled matching; unsupervised objective-driven training for QAPLIB setting</td>
-        <td>QAPLIB + vision graph matching benchmarks (in the same pipeline)</td>
-        <td>QAPLIB sizes up to 256 mentioned; excludes the hardest tai256c due to memory burden</td>
-        <td>Reports best-performing counts on QAPLIB (e.g., best on 72/133 instances with heavy sampling in their table)</td>
-        <td>Association-graph scaling and memory bottlenecks; evaluation uses normalized scoring rather than uniform optimality-gap reporting</td>
-      </tr>
-      <tr>
-        <td>Deep RL for QAP with double pointer network (2023) <d-cite key="bagga2023drl_qap_double_pointer"></d-cite></td>
-        <td>RL (constructive)</td>
-        <td>Alternating pointer decoding over locations/facilities with GRUs + attention; location encoding + facility GCN embeds</td>
-        <td>Actor–critic training; evaluated as % gap vs a swap heuristic baseline</td>
-        <td>Synthetic symmetric Koopmans–Beckmann instances with Euclidean locations</td>
-        <td>$n=10,20$</td>
-        <td>Average gap ~7–9% vs swap heuristic; faster than a time-limited MILP solver in their setup</td>
-        <td>Small sizes only; comparison target is a heuristic baseline; unclear scaling to $n\ge 50$</td>
-      </tr>
-      <tr>
-        <td>Solution-aware transformer learn-to-improve (ICML 2024) <d-cite key="tan2024sawt_qap"></d-cite></td>
-        <td>RL (learn-to-improve) + attention</td>
-        <td>Separate facility/location encoding; “solution-aware” attention uses incumbent-dependent matrix; proposes swap actions</td>
-        <td>Policy-gradient with value baseline + entropy; reward tied to improvement vs best-so-far</td>
-        <td>Synthetic QAP10/20/50/100 + QAPLIB generalization</td>
-        <td>Up to $n=100$ synthetic; QAPLIB includes up to $n=256$</td>
-        <td>Synthetic: near-zero gaps at higher search steps; QAPLIB: mean gap reported as 26.8% with per-instance time ~12.11s</td>
-        <td>Large distribution shift across QAPLIB categories; needs better cross-category generalization</td>
-      </tr>
-      <tr>
-        <td>Unsupervised learning for QAP as tabu-search initialization (2025) <d-cite key="min2025ul_qap_plume"></d-cite></td>
-        <td>Unsupervised + hybrid heuristic</td>
-        <td>Permutation-equivariant network outputs logits; entropic relaxation gives soft permutation; discretize then tabu search</td>
-        <td>Unsupervised objective; no solved-instance labels; evaluated by tabu-search improvement</td>
-        <td>Synthetic instances across sizes/densities</td>
-        <td>$n=100,200$</td>
-        <td>Improves over random initialization and improves downstream tabu-search final cost under multiple budgets</td>
-        <td>Gains after strong tabu can be modest; trained per regime; not benchmarked on QAPLIB</td>
-      </tr>
-      <tr>
-        <td>Bi-level differentiable framework (2025) <d-cite key="shi2025biqap"></d-cite></td>
-        <td>Differentiable relaxation + bi-level</td>
-        <td>Network modifies an instance; inner solver uses entropic relaxation + iterative normalization; discretize</td>
-        <td>Bi-level training: outer loss is original QAP objective; inner solved via differentiable layer; multi-sampling</td>
-        <td>Case studies incl. QAPLIB + large synthetic</td>
-        <td>Reports up to sizes like 500–1000 in a “large random dataset”</td>
-        <td>QAPLIB: best on 92/134 instances; strong on many instances vs a lifted-relaxation baseline</td>
-        <td>Normalized scoring + per-category training; cross-category transfer and consistent gap reporting unclear</td>
-      </tr>
-      <tr>
-        <td>Warm-started MCMC finetuning + cross-graph attention (OpenReview 2026) <d-cite key="pan2026plma_qap_mcmc"></d-cite></td>
-        <td>Learning-to-optimize + hybrid search</td>
-        <td>Cross-graph attention heatmap; additive energy model enables fast 2-swap proposal scoring; warm-start refinement</td>
-        <td>Pretrain then inference-time adaptation; evaluates runtime–gap tradeoffs</td>
-        <td>Synthetic + QAPLIB + Taixxeyy</td>
-        <td>Synthetic up to at least $n=500$</td>
-        <td>QAPLIB: avg gap ~0.10% with faster time than a strong tabu baseline (as reported)</td>
-        <td>Sensitive to inference-time budget + time accounting; depends on reference-solution definitions</td>
-      </tr>
-    </tbody>
-  </table>
+| Paper / year | Method family | Core modeling choice | Training paradigm and loss | Data / benchmark | Sizes reported | Performance vs baselines (as reported) | Key limitations (as reported/visible) |
+|---|---|---|---|---|---|---|---|
+| Revised note on learning QAP with GNNs (2018) <d-cite key="nowak2018revised_qap_gnn"></d-cite> | Supervised learning + GNN | Siamese GNN embeddings; outer product to score matches; row/col softmax to approximate permutation | Supervised planted-solution training; cross-entropy on recovered permutation | Synthetic Erdős–Rényi / random regular graph alignment | Example: $n=50$ | High recovery rates across noise in tested regimes; outperforms some relaxation baselines on random regular graphs in their experiments | Focused on planted/random-graph regimes; not a direct QAPLIB facility-layout evaluation; requires supervised targets from the generator |
+| Neural graph matching network for Lawler QAP (2019; TPAMI 2022) <d-cite key="wang2019ngm_lawler_qap,wang2022ngm_tpami"></d-cite> | GNN solver + differentiable projection | Association graph embedding (can be $O(n^2)$ nodes); projection to a doubly-stochastic solution; sampling to explore feasible space | Supervised (cross-entropy) for labeled matching; unsupervised objective-driven training for QAPLIB setting | QAPLIB + vision graph matching benchmarks (in the same pipeline) | QAPLIB sizes up to 256 mentioned; excludes the hardest tai256c due to memory burden | Reports best-performing counts on QAPLIB (e.g., best on 72/133 instances with heavy sampling in their table) | Association-graph scaling and memory bottlenecks; evaluation uses normalized scoring rather than uniform optimality-gap reporting |
+| Deep RL for QAP with double pointer network (2023) <d-cite key="bagga2023drl_qap_double_pointer"></d-cite> | RL (constructive) | Alternating pointer decoding over locations/facilities with GRUs + attention; location encoding + facility GCN embeds | Actor–critic training; evaluated as % gap vs a swap heuristic baseline | Synthetic symmetric Koopmans–Beckmann instances with Euclidean locations | $n=10,20$ | Average gap ~7–9% vs swap heuristic; faster than a time-limited MILP solver in their setup | Small sizes only; comparison target is a heuristic baseline; unclear scaling to $n\ge 50$ |
+| Solution-aware transformer learn-to-improve (ICML 2024) <d-cite key="tan2024sawt_qap"></d-cite> | RL (learn-to-improve) + attention | Separate facility/location encoding; “solution-aware” attention uses incumbent-dependent matrix; proposes swap actions | Policy-gradient with value baseline + entropy; reward tied to improvement vs best-so-far | Synthetic QAP10/20/50/100 + QAPLIB generalization | Up to $n=100$ synthetic; QAPLIB includes up to $n=256$ | Synthetic: near-zero gaps at higher search steps; QAPLIB: mean gap reported as 26.8% with per-instance time ~12.11s | Large distribution shift across QAPLIB categories; needs better cross-category generalization |
+| Unsupervised learning for QAP as tabu-search initialization (2025) <d-cite key="min2025ul_qap_plume"></d-cite> | Unsupervised + hybrid heuristic | Permutation-equivariant network outputs logits; entropic relaxation gives soft permutation; discretize then tabu search | Unsupervised objective; no solved-instance labels; evaluated by tabu-search improvement | Synthetic instances across sizes/densities | $n=100,200$ | Improves over random initialization and improves downstream tabu-search final cost under multiple budgets | Gains after strong tabu can be modest; trained per regime; not benchmarked on QAPLIB |
+| Bi-level differentiable framework (2025) <d-cite key="shi2025biqap"></d-cite> | Differentiable relaxation + bi-level | Network modifies an instance; inner solver uses entropic relaxation + iterative normalization; discretize | Bi-level training: outer loss is original QAP objective; inner solved via differentiable layer; multi-sampling | Case studies incl. QAPLIB + large synthetic | Reports up to sizes like 500–1000 in a “large random dataset” | QAPLIB: best on 92/134 instances; strong on many instances vs a lifted-relaxation baseline | Normalized scoring + per-category training; cross-category transfer and consistent gap reporting unclear |
+| Warm-started MCMC finetuning + cross-graph attention (OpenReview 2026) <d-cite key="pan2026plma_qap_mcmc"></d-cite> | Learning-to-optimize + hybrid search | Cross-graph attention heatmap; additive energy model enables fast 2-swap proposal scoring; warm-start refinement | Pretrain then inference-time adaptation; evaluates runtime–gap tradeoffs | Synthetic + QAPLIB + Taixxeyy | Synthetic up to at least $n=500$ | QAPLIB: avg gap ~0.10% with faster time than a strong tabu baseline (as reported) | Sensitive to inference-time budget + time accounting; depends on reference-solution definitions |
 
 </div>
 
-<p>I need to focus on a specific family so I decided to focus on improvement based methods, since I remember Tabu Search works pretty well in the QAP. To do so, the ICML 2024 work seems a good starting point <d-cite key="tan2024sawt_qap"></d-cite>.</p>
+I need to focus on a specific family so I decided to focus on improvement based methods, since I remember Tabu Search works pretty well in the QAP. To do so, the ICML 2024 work seems a good starting point <d-cite key="tan2024sawt_qap"></d-cite>.
 
-<hr />
+---
 
-<h2 id="stage-2-gaps-within-neural-qap">Stage 2: Gaps within Neural QAP</h2>
+## Stage 2: Gaps within Neural QAP
 
-<p>The literature report came back with the usual “checkbox gaps”: scalability beyond small $n$, generalization to QAPLIB, hybridization with exact solvers, lack of standardized benchmarks, and a <em>“theory and guarantees”</em> bucket (help!). All true, but also a bit too generic.</p>
+The literature report came back with the usual “checkbox gaps”: scalability beyond small $n$, generalization to QAPLIB, hybridization with exact solvers, lack of standardized benchmarks, and a *“theory and guarantees”* bucket (help!). All true, but also a bit too generic.
 
-<p>What I <em>did</em> take seriously is the evaluation angle. 
+What I *did* take seriously is the evaluation angle. 
 Seems like QAP papers often look hard to compare because each one uses different evaluation protocols: different instance generators, different time budgets, different baselines. 
-So rather than jumping straight into model design, I decided to first produce a <strong>clean benchmark + reproducible baselines</strong>.</p>
+So rather than jumping straight into model design, I decided to first produce a **clean benchmark + reproducible baselines**. 
 
-<p>That said, I didn’t want this weekend to become an exercise of reviewing theoretical proofs, or re-implementing plain tabu search for the tenth time. 
-My point is to explore something <strong>algorithmic</strong>: a representation choice, an inference procedure, or a learning pipeline that is genuinely better aligned with QAP’s structure.</p>
+That said, I didn’t want this weekend to become an exercise of reviewing theoretical proofs, or re-implementing plain tabu search for the tenth time. 
+My point is to explore something **algorithmic**: a representation choice, an inference procedure, or a learning pipeline that is genuinely better aligned with QAP’s structure.
 
-<p>So I asked the LLM again:</p>
+So I asked the LLM again:
 
-<p><b>Q.</b> <i>Ignore generic “future work” (scale, more benchmarks, theory). Based on existing neural QAP methods, list 5–8 specific, mechanism-level gaps and a concrete improvement for each.</i></p>
 
-<p>You can propose ideas like:</p>
-<ul>
-  <li>representation of (F, D, permutation/incumbent),</li>
-  <li>inference/search procedure,</li>
-  <li>learning pipeline/objective aligned with QAP structure.</li>
-</ul>
+<b>Q.</b> <i>Ignore generic “future work” (scale, more benchmarks, theory). Based on existing neural QAP methods, list 5–8 specific, mechanism-level gaps and a concrete improvement for each.
 
-<p>For each item give:</p>
-<ul>
-  <li>Failure mode → Fix → Minimal experiment (dataset/baseline/metric/budget).
-&lt;/i&gt;</li>
-</ul>
+You can propose ideas like:
+- representation of (F, D, permutation/incumbent),
+- inference/search procedure,
+- learning pipeline/objective aligned with QAP structure.
 
-<p><strong>A.</strong> It came with a bunch of interesting gaps, here the most interesting ones in my opinion:</p>
+For each item give:
+- Failure mode → Fix → Minimal experiment (dataset/baseline/metric/budget).
+</i>
 
-<ul>
-  <li>
-    <p><strong>Association-graph materialization blows up memory.</strong> Methods that build the full association graph quickly hit GPU-memory limits as $n$ grows, making large QAPLIB instances impractical.</p>
-  </li>
-  <li>
-    <p><strong>2-swap-only neighborhoods dominate inference.</strong> Many pipelines rely almost exclusively on facility–facility swaps, which mixes slowly when good improvements require coordinated multi-facility reassignment.</p>
-  </li>
-  <li>
-    <p><strong>Additive scoring/energy misses quadratic coupling.</strong> Surrogates that score assignments as $\sum_i \phi_{i,\pi(i)}$ cannot represent the true quadratic interactions, biasing move ranking and exploration, especially on dense instances.</p>
-  </li>
-  <li>
-    <p><strong>Sparse/ambiguous reward in learn-to-improve RL.</strong> Treating non-improving steps as “zero signal” (and not explicitly penalizing worsening moves) makes plateaus look identical and wastes steps under tight budgets.</p>
-  </li>
-  <li>
-    <p><strong>Initializer training is decoupled from downstream search.</strong> Models trained to output a “good” permutation often optimize a surrogate objective, while actual performance comes from a later tabu/local-search stage—so learning is misaligned with what’s deployed.</p>
-  </li>
-  <li>
-    <p><strong>Entropic/Sinkhorn inner solvers are local-optimum prone.</strong> Differentiable relaxation methods can get stuck; quality becomes heavily dependent on stochastic multi-start, increasing variance and compute.</p>
-  </li>
-  <li>
-    <p><strong>Soft training vs hard rounding mismatch.</strong> Training optimizes a continuous doubly-stochastic solution, but evaluation uses a discrete permutation after Hungarian rounding; small changes in the soft matrix can cause large discrete jumps, misaligning the optimized loss with the measured objective.</p>
-  </li>
-</ul>
+**A.** It came with a bunch of interesting gaps, here the most interesting ones in my opinion:
 
-<hr />
+- **Association-graph materialization blows up memory.** Methods that build the full association graph quickly hit GPU-memory limits as $n$ grows, making large QAPLIB instances impractical.
 
-<h2 id="stage-3-the-proposal-architecture-and-traininginference-recipe">Stage 3: The Proposal: Architecture and Training/Inference Recipe</h2>
+- **2-swap-only neighborhoods dominate inference.** Many pipelines rely almost exclusively on facility–facility swaps, which mixes slowly when good improvements require coordinated multi-facility reassignment.
 
-<p>Talk about how we will first code the benchmark: in distribution performance (syhthetic instances), generalization to larger sizes and to QAPLIB, computational cost of training and inference.</p>
+- **Additive scoring/energy misses quadratic coupling.** Surrogates that score assignments as $\sum_i \phi_{i,\pi(i)}$ cannot represent the true quadratic interactions, biasing move ranking and exploration, especially on dense instances.
 
-<p>The second step is how to represent the problem with a neural network</p>
+- **Sparse/ambiguous reward in learn-to-improve RL.** Treating non-improving steps as “zero signal” (and not explicitly penalizing worsening moves) makes plateaus look identical and wastes steps under tight budgets.
 
-<p>Then we need to think about decoding constructive vs improvement?</p>
+- **Initializer training is decoupled from downstream search.** Models trained to output a “good” permutation often optimize a surrogate objective, while actual performance comes from a later tabu/local-search stage—so learning is misaligned with what’s deployed.
 
-<p>Finally the learning: supervised? RL? unsupervised?</p>
+- **Entropic/Sinkhorn inner solvers are local-optimum prone.** Differentiable relaxation methods can get stuck; quality becomes heavily dependent on stochastic multi-start, increasing variance and compute.
 
-<hr />
+- **Soft training vs hard rounding mismatch.** Training optimizes a continuous doubly-stochastic solution, but evaluation uses a discrete permutation after Hungarian rounding; small changes in the soft matrix can cause large discrete jumps, misaligning the optimized loss with the measured objective.
 
-<h2 id="stage-4-from-idea-to-code-implementation-plan">Stage 4: From Idea to Code: Implementation Plan</h2>
+---
 
-<hr />
 
-<h2 id="stage-5-experiments-and-evaluation-protocol">Stage 5: Experiments and Evaluation Protocol</h2>
+## Stage 3: The Proposal: Architecture and Training/Inference Recipe
 
-<hr />
+Talk about how we will first code the benchmark: in distribution performance (syhthetic instances), generalization to larger sizes and to QAPLIB, computational cost of training and inference.
 
-<h2 id="stage-6-what-worked-what-didnt-results-ablations-and-failure-modes">Stage 6: What Worked, What Didn’t: Results, Ablations, and Failure Modes</h2>
+The second step is how to represent the problem with a neural network
 
-<hr />
+Then we need to think about decoding constructive vs improvement?
 
-<h2 id="stage-7-packaging-it-final-write-up">Stage 7: Packaging It: Final Write-up</h2>
+Finally the learning: supervised? RL? unsupervised?
 
-<hr />
+---
 
-<h2 id="wrapping-up">Wrapping up</h2>
+
+## Stage 4: From Idea to Code: Implementation Plan
+
+
+---
+
+
+## Stage 5: Experiments and Evaluation Protocol
+
+
+---
+
+
+## Stage 6: What Worked, What Didn’t: Results, Ablations, and Failure Modes
+
+
+---
+
+
+## Stage 7: Packaging It: Final Write-up
+
+---
+
+## Wrapping up
+
 
 <d-bibliography></d-bibliography>]]></content><author><name>Andoni Irazusta Garmendia</name></author><category term="nco" /><summary type="html"><![CDATA[Weekend project with LLMs.]]></summary></entry><entry><title type="html">Scale Generalization Problem in NCO</title><link href="https://theleprechaun25.github.io/blog/2026/scale-generalization-problem/" rel="alternate" type="text/html" title="Scale Generalization Problem in NCO" /><published>2026-02-17T00:00:00+00:00</published><updated>2026-02-17T00:00:00+00:00</updated><id>https://theleprechaun25.github.io/blog/2026/scale-generalization-problem</id><content type="html" xml:base="https://theleprechaun25.github.io/blog/2026/scale-generalization-problem/"><![CDATA[<h2 id="neural-improvement-for-the-tsp">Neural Improvement for the TSP</h2>
 
