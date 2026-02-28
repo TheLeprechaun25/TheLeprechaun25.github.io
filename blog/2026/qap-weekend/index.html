@@ -355,7 +355,7 @@ It’s been a while, so I simply asked the LLM for a quick refresh.</p>
       <tr>
         <td>
 <strong>Neural Graph Matching Network: Learning Lawler’s Quadratic Assignment Problem With Extension to Hypergraph and Multiple-Graph Matching</strong> (2019; TPAMI 2022)</td>
-        <td><d-cite key="wang2019ngm_lawler_qap,wang2022ngm_tpami"></d-cite></td>
+        <td><d-cite key="wang2022ngm_tpami"></d-cite></td>
         <td>Association-graph neural matching + Sinkhorn projection to predict permutations for Lawler-QAP / graph matching; extends to hypergraph and multi-graph matching settings.</td>
       </tr>
       <tr>
@@ -363,6 +363,12 @@ It’s been a while, so I simply asked the LLM for a quick refresh.</p>
 <strong>Solving the Quadratic Assignment Problem using Deep Reinforcement Learning</strong> (2023)</td>
         <td><d-cite key="bagga2023drl_qap_double_pointer"></d-cite></td>
         <td>Constructive RL for Koopmans–Beckmann QAP using an alternating “double pointer” style policy over facilities/locations, trained with actor–critic.</td>
+      </tr>
+      <tr>
+        <td>
+<strong>Revocable Deep Reinforcement Learning with Affinity Regularization for Outlier-Robust Graph Matching</strong> (ICLR 2023)</td>
+        <td><d-cite key="liu2023rgm_affinity"></d-cite></td>
+        <td>RL-based solver for Lawler-QAP/graph matching with outliers; uses revocable decisions and affinity regularization to improve robustness to unmatched nodes.</td>
       </tr>
       <tr>
         <td>
@@ -388,18 +394,59 @@ It’s been a while, so I simply asked the LLM for a quick refresh.</p>
         <td><d-cite key="pan2026plma_qap_mcmc"></d-cite></td>
         <td>Cross-graph attention + warm-started MCMC finetuning/adaptation at inference time; energy-based formulation for efficient swap proposals and runtime–quality tradeoffs.</td>
       </tr>
-      <tr>
-        <td>
-<strong>Revocable Deep Reinforcement Learning with Affinity Regularization for Outlier-Robust Graph Matching</strong> (ICLR 2023)</td>
-        <td><d-cite key="liu2023rgm_affinity"></d-cite></td>
-        <td>RL-based solver for Lawler-QAP/graph matching with outliers; uses revocable decisions and affinity regularization to improve robustness to unmatched nodes.</td>
-      </tr>
     </tbody>
   </table>
 
 </div>
 
-<p>I need to focus on a specific family so I decided to focus on improvement based methods, since I remember Tabu Search works pretty well in the QAP. To do so, the ICML 2024 work seems a good starting point <d-cite key="tan2024sawt_qap"></d-cite>.</p>
+<p>For this project, I want to isolate what a neural policy can do <strong>without leaning on an external metaheuristic</strong>. Those hybrid pipelines are often excellent in practice, but they also blur the real potential of a neural solver, treating it as a neural component inside a classical solver.</p>
+
+<p>So I’ll treat the following as <em>hybrid baselines</em> rather than the main object of study:</p>
+<ul>
+  <li>
+    <d-cite key="min2025ul_qap_plume"></d-cite>
+    <p>(explicit tabu-search backbone; the network primarily provides an initialization)</p>
+  </li>
+  <li>
+    <d-cite key="pan2026plma_qap_mcmc"></d-cite>
+    <p>(explicit inference-time MCMC finetuning/adaptation)</p>
+  </li>
+</ul>
+
+<p>Instead, the most relevant direction for me is the learn-to-improve family, especially <d-cite key="tan2024sawt_qap"></d-cite>—because it looks structurally close to what makes classical QAP solvers strong: <strong>swap-based improvement trajectories</strong>.</p>
+
+<p>I’ll start from methods with public code so the comparisons are not based on re-implementations:</p>
+
+<ul>
+  <li>
+    <d-cite key="nowak2018revised_qap_gnn"></d-cite>
+    <p>— <code class="language-plaintext highlighter-rouge">alexnowakvila/QAP_pt</code></p>
+  </li>
+  <li>
+    <d-cite key="wang2022ngm_tpami"></d-cite>
+    <p>— <code class="language-plaintext highlighter-rouge">Thinklab-SJTU/ThinkMatch</code> (NGM model folder)</p>
+  </li>
+  <li>
+    <d-cite key="bagga2023drl_qap_double_pointer"></d-cite>
+    <p>— <code class="language-plaintext highlighter-rouge">psbagga17/drlqap</code></p>
+  </li>
+  <li>
+    <d-cite key="liu2023rgm_affinity"></d-cite>
+    <p>— <code class="language-plaintext highlighter-rouge">Thinklab-SJTU/RGM</code></p>
+  </li>
+  <li>
+    <d-cite key="tan2024sawt_qap"></d-cite>
+    <p>— <code class="language-plaintext highlighter-rouge">PKUTAN/SAWT</code></p>
+  </li>
+</ul>
+
+<p>A key point already shows up here: these baselines actually split into <strong>two partially different “QAPs”</strong> in practice:</p>
+<ul>
+  <li>
+<em>facility-layout / Koopmans–Beckmann</em> settings (often geometry-structured),</li>
+  <li>
+<em>Lawler-QAP / graph matching</em> settings (affinity-driven, association-graph flavored).</li>
+</ul>
 
 <hr>
 
@@ -423,8 +470,6 @@ My point is to explore something <strong>algorithmic</strong>: a representation 
   <li>representation of (F, D, permutation/incumbent),</li>
   <li>inference/search procedure,</li>
   <li>learning pipeline/objective aligned with QAP structure.</li>
-  <li>Focus on these two papers: <d-cite key="tan2024sawt_qap"></d-cite>
-</li>
 </ul>
 
 <p>&lt;/i&gt;</p>
@@ -433,7 +478,13 @@ My point is to explore something <strong>algorithmic</strong>: a representation 
 
 <ul>
   <li>
+    <p><strong>“What problem are we solving?” (KB-QAP vs Lawler-QAP mismatch).</strong> Several neural papers labeled as “QAP” are really solving different formulations (layout-flavored KB-QAP vs matching-flavored Lawler-QAP). This makes comparisons misleading unless the benchmark is explicit about which regime it targets. Some neural pipelines implicitly rely on coordinates and Euclidean geometry (a habit from TSP). In QAP, and particularly in QAPLIB, $D$ is often just an arbitrary cost matrix (grid/manhattan, random, structured, etc.), so a coordinate-based inductive bias can break silently.</p>
+  </li>
+  <li>
     <p><strong>Association-graph materialization blows up memory.</strong> Methods that build the full association graph quickly hit GPU-memory limits as $n$ grows, making large QAPLIB instances impractical.</p>
+  </li>
+  <li>
+    <p><strong>Constructive RL tends to be underpowered unless it gets strong structure priors.</strong> Constructive decoders face hard credit assignment because early choices interact quadratically with everything that comes later. This is visible in small-$n$ RL papers that do not scale cleanly.</p>
   </li>
   <li>
     <p><strong>Additive scoring/energy misses quadratic coupling.</strong> Surrogates that score assignments as $\sum_i \phi_{i,\pi(i)}$ cannot represent the true quadratic interactions, biasing move ranking and exploration, especially on dense instances.</p>
@@ -443,51 +494,180 @@ My point is to explore something <strong>algorithmic</strong>: a representation 
   </li>
 </ul>
 
-<p>I had some additional gaps in my mind, which the LLM did not mention:</p>
-<ul>
-  <li>
-<strong>Current neural approaches where implemented for the euclidean QAP</strong>. Methods that take coordinates (as done in euclidean TSP implementations), to measure distances. However, they are limited to instances in which distances are euclidean (computed from euclidean coordinates).</li>
-</ul>
-
 <hr>
 
 <h2 id="stage-3-the-proposal-architecture-and-traininginference-recipe">Stage 3: The Proposal: Architecture and Training/Inference Recipe</h2>
 
-<p>Talk about how we will first code the benchmark: in distribution performance (syhthetic instances), generalization to larger sizes and to QAPLIB, computational cost of training and inference.</p>
+<p>Before touching model design, I implemented the <em>classical baselines</em> (greedy construction + swap local search), <em>neural baselines</em> (RGM <d-cite key="liu2023rgm_affinity"></d-cite>, SAWT <d-cite key="tan2024sawt_qap"></d-cite>) and a synthetic evaluation pack. This gave me a stable loop: generate instances → run solver under a fixed step budget → report objective / gap / runtime.</p>
 
-<p>The second step is how to represent the problem with a neural network</p>
+<h3 id="a-minimal-neural-improvement-starting-point">A minimal neural-improvement starting point</h3>
 
-<p>Then we need to think about decoding constructive vs improvement?</p>
+<p>The first neural baseline is deliberately simple: a <strong>swap-based neural improvement</strong> policy.</p>
 
-<p>Finally the learning: supervised? RL? unsupervised?</p>
+<ul>
+  <li>
+<strong>State:</strong> an incumbent permutation $\pi$ (starting from a sequential initialization).</li>
+  <li>
+<strong>Action:</strong> choose a swap $(i,j)$ and apply it.</li>
+  <li>
+<strong>Rollout:</strong> fixed horizon of $T=4$ steps.</li>
+  <li>
+<strong>Training:</strong> RL on improvement trajectories (Normalized improvement over $T$ steps as reward).</li>
+</ul>
+
+<p>The main design question then became: <em>what inductive bias should the policy have to pick good swaps reliably?</em><br>
+Instead of trying to design the final model in one shot, I iterated quickly with a coding agent: propose a modification, implement, train a short run, keep the changes that improve the validation curve.</p>
+
+<p>Below is a compact log of the most informative iterations (validation on 100 instances, sequential init, $4N$ steps).</p>
 
 <hr>
 
-<h2 id="stage-4-from-idea-to-code-implementation-plan">Stage 4: From Idea to Code: Implementation Plan</h2>
+<h3 id="iteration-log-what-changed-and-why">Iteration log (what changed, and why)</h3>
 
-<hr>
+<h4 id="1-baseline-swap-policy-trained-on-n5">1) Baseline swap policy (trained on $n=5$)</h4>
+<p><strong>Result (gap to optimal @ $n=5$):</strong> 1.8522%<br>
+<strong>What it is:</strong> a basic swap policy trained end-to-end with RL, without strong QAP structure injected.</p>
 
-<h2 id="stage-5-experiments-and-evaluation-protocol">Stage 5: Experiments and Evaluation Protocol</h2>
+<h4 id="2-minmax-instance-normalization">2) Min–max instance normalization</h4>
+<p><strong>Result (gap to optimal @ $n=5$):</strong> 1.6824%<br>
+<strong>Change:</strong> normalize the instance matrices (flow and distance) with min–max scaling.<br>
+<strong>Why it helped:</strong> reduced sensitivity to absolute scale and improved optimization stability.</p>
 
-<p>Train with instances of size 5, generalize to sizes, 5, 10, 15, 20</p>
+<h4 id="3-hetero_rel_transformer-2n-heterogeneous-tokens--relational-attention">3) <code class="language-plaintext highlighter-rouge">hetero_rel_transformer</code> (2$n$ heterogeneous tokens + relational attention)</h4>
+<p><strong>Result (gap to optimal @ $n=5$):</strong> 1.5965%<br>
+<strong>Change:</strong> represent each instance with <strong>2$n$ tokens</strong>:</p>
+<ul>
+  <li>$n$ facility tokens + $n$ location tokens,<br>
+and inject instance structure via <strong>relation-biased attention</strong> (flows on facility–facility edges, distances on location–location edges, assignment links on cross edges).<br>
+<strong>Why it helped:</strong> forced the policy to treat QAP structure as pairwise relations rather than flat features.</li>
+</ul>
 
-<p>Compare to two baselines (trained with instances of size 20), greedy construction, and local search.</p>
+<h4 id="4-hetero_rel_transformer-v2-solution-aware-relations--stronger-attention-control">4) <code class="language-plaintext highlighter-rouge">hetero_rel_transformer v2</code> (solution-aware relations + stronger attention control)</h4>
+<p><strong>Result (gap to optimal @ $n=5$):</strong> 1.1659%<br>
+<strong>Changes (core ones):</strong></p>
+<ul>
+  <li>add <strong>induced distance</strong> $D_{\pi(i)\pi(j)}$ as a first-class relation feature,</li>
+  <li>add <strong>per-head gates</strong> that balance content attention ($qk$) vs relation bias,</li>
+  <li>optionally modulate value aggregation with relation features.<br>
+<strong>Why it helped:</strong> made the encoder explicitly <em>solution-aware</em> in the same way swap delta computations are.</li>
+</ul>
+
+<h4 id="5-1-dual-encoder-layer-facility-only--location-only-pre-encoding">5) +1 dual-encoder layer (facility-only + location-only pre-encoding)</h4>
+<p><strong>Result (gap to optimal @ $n=5$):</strong> 1.0301%<br>
+<strong>Change:</strong> before the 2$n$ hetero encoder, run a small “static” encoder:</p>
+<ul>
+  <li>facility-only attention over $F$,</li>
+  <li>location-only attention over $D$,
+then fuse these static embeddings with the dynamic (solution-conditioned) tokens.<br>
+<strong>Why it helped:</strong> improved token quality by encoding within-type structure (flow communities, distance geometry) before mixing types.</li>
+</ul>
+
+<h4 id="6-pre-norm-gtlayer--relation-features-as-both-bias-and-gate-e1e2">6) Pre-norm <code class="language-plaintext highlighter-rouge">GTLayer</code> + relation features as both bias and gate (e1/e2)</h4>
+<p><strong>Result (gap to optimal @ $n=5$):</strong> 0.6666%<br>
+<strong>Change:</strong> switch the main layers to a <strong>pre-norm transformer</strong> where relation features affect attention in two ways:</p>
+<ul>
+  <li>
+<strong>e1:</strong> additive bias on attention logits,</li>
+  <li>
+<strong>e2:</strong> multiplicative gate on attention probabilities (relation-conditioned filtering).<br>
+<strong>Why it helped:</strong> the model can learn both <em>which relations matter</em> (gate) and <em>how strongly</em> (bias), which is closely aligned with swap evaluation.</li>
+</ul>
+
+<h4 id="7-3-static-pre-layers-stronger-dual-encoder">7) +3 static (pre) layers (stronger dual encoder)</h4>
+<p><strong>Result (gap to optimal @ $n=5$):</strong> 0.5694%<br>
+<strong>Change:</strong> deepen the static pre-encoder (3 layers).<br>
+<strong>Observation:</strong> more capacity helps in-distribution, but can start to over-specialize and hurt out-of-distribution generalization.</p>
+
+<h4 id="8-hetero_rel_transformer_3n_assign_pairwl-3n-tokens--explicit-assignment-tokens--pairwise-reasoning">8) <code class="language-plaintext highlighter-rouge">hetero_rel_transformer_3n_assign_pairwl</code> (3$n$ tokens + explicit assignment tokens + pairwise reasoning)</h4>
+<p><strong>Result (gap to optimal @ $n=5$):</strong> 0.3677%<br>
+<strong>Change:</strong> move from 2$n$ to <strong>3$n$ tokens</strong> by adding an <strong>assignment token</strong> $A_i$ for each facility:</p>
+<ul>
+  <li>$F_i$ (facility token), $L_a$ (location token), and $A_i=(i,\pi(i))$ (current assignment token).<br>
+Then decode swaps with a <strong>pair-state module</strong> (PairWL): an approximate 2-WL-style update over assignment-token pairs $(i,j)$ using triadic composition $\sum_k (i,k)\circ(k,j)$.<br>
+<strong>Why it helped:</strong> swap choice is inherently pairwise; making pair structure explicit reduces the burden on facility embeddings.</li>
+</ul>
+
+<h4 id="9---pairwl_use_token_feedback">9) <code class="language-plaintext highlighter-rouge">--pairwl_use_token_feedback</code>
+</h4>
+<p><strong>Result (gap to optimal @ $n=5$):</strong> 0.3128%<br>
+<strong>Change:</strong> add <strong>pair-to-token feedback</strong>, pooling pair states around each assignment token and writing back into token embeddings.<br>
+<strong>Why it helped (and hurt):</strong> improves in-distribution consistency, but can increase coupling and reduce robustness when scaling.</p>
+
+<h4 id="10---pairwl_use_relation_aware_triad----pairwl_use_strong_token_feedback">10) <code class="language-plaintext highlighter-rouge">--pairwl_use_relation_aware_triad + --pairwl_use_strong_token_feedback</code>
+</h4>
+<p><strong>Result (gap to optimal @ $n=5$):</strong> 0.2972%<br>
+<strong>Changes:</strong></p>
+<ul>
+  <li>make the triadic composition <strong>relation-aware</strong> by gating intermediate nodes $k$ using learned functions of local pair features,</li>
+  <li>strengthen the token feedback pathway (optionally top-$k$ pooling).<br>
+<strong>Why it helped:</strong> pushes the pair module closer to swap-delta reasoning, where triadic context is filtered by instance- and solution-dependent cues.</li>
+</ul>
+
+<p>To summarize the effect of these design iterations, the next Figure shows the validation gap (on $n=5$) after each architecture update.</p>
 
 <p style="text-align:center;">
-  <img src="/assets/img/anytime_euclid_panel.png" alt="Alt text" style="width:80%; max-width:900px;">
+  <img src="/assets/img/qap_llm_gap_vs_iteration.png" alt="Alt text" style="width:80%; max-width:900px;">
 </p>
 
 <hr>
 
-<h2 id="stage-6-what-worked-what-didnt-results-ablations-and-failure-modes">Stage 6: What Worked, What Didn’t: Results, Ablations, and Failure Modes</h2>
+<h3 id="what-i-take-from-these-iterations">What I take from these iterations</h3>
+
+<p>1) The best improvements came from features that mimic <em>how swap local search evaluates moves</em>:</p>
+<ul>
+  <li>induced distances under the incumbent ($D_{\pi(i)\pi(j)}$),</li>
+  <li>strong control of relation influence (bias + gate),</li>
+  <li>explicit pair reasoning when decoding swaps.</li>
+</ul>
+
+<p>2) Extra capacity helps, but only if it reinforces the right structure.<br>
+   The 3N + PairWL variants are slower, but they improved generalization markedly at larger $n$ under the same step budget.</p>
+
+<p>In the next stage, I’ll formalize the evaluation protocol and compare these variants against the basleines under consistent budgets.</p>
 
 <hr>
 
-<h2 id="stage-7-packaging-it-final-write-up">Stage 7: Packaging It: Final Write-up</h2>
+<h2 id="stage-4-experiments-and-evaluation-protocol">Stage 4: Experiments and Evaluation Protocol</h2>
+
+<p>After several architecture iterations, the next step is to evaluate under a more realistic protocol: more test instances, multiple sizes, and direct comparison against both learned and classical baselines.</p>
+
+<p>We use our model trained exclusively on instances of size $n=5$. However, we will now evaluate their generalization to larger sizes:
+$n \in {5,10,15,20}$.</p>
+
+<h3 id="baselines">Baselines</h3>
+
+<p>We compare against four baselines that cover both “neural” and “classical” points of reference:</p>
+
+<ul>
+  <li>
+<strong>Learned baselines:</strong>  RGM (neural constructive trained on $n=20$) and SAWT (neural improvement trained on $n=20$).</li>
+  <li>
+<strong>Greedy constructive:</strong> a simple non-learned heuristic that builds a permutation once.</li>
+  <li>
+<strong>Swap local search:</strong> a classical improvement baseline operating in the same 2-swap neighborhood, run until getting stuck in a local optima.</li>
+</ul>
+
+<p>We report <strong>anytime performance</strong> (best-so-far objective versus time).</p>
+
+<p style="text-align:center;">
+  <img src="/assets/img/anytime_euclid_panel.png" alt="Anytime performance across sizes" style="width:80%; max-width:900px;">
+</p>
+
+<p>Results show a clear pattern: the policy trained on $n=5$ remains competitive on $n=5$ and exhibits non-trivial transfer to larger sizes. Under the same evaluation budget, it achieves the strongest final objective among the tested baselines, indicating that the improvements learned in the small regime are not purely size-specific.</p>
 
 <hr>
 
-<h2 id="wrapping-up">Wrapping up</h2>
+<h2 id="stage-5-wrapping-up">Stage 5: Wrapping up</h2>
+
+<p>I did not expect the final outcome to look this strong.</p>
+
+<p>The most surprising part is not that a neural model can learn to propose useful swaps, that is plausible in hindsight, but that <em>the iteration loop</em> was fast enough to make that progress in a couple of days. In the past, I had explored similar ideas, but the cost of implementation details (plumbing, debugging, profiling, refactors) made each iteration way longer. Ideas accumulated in unfinished branches and abandoned folders, long before reaching a clean evaluation protocol.</p>
+
+<p>This time, the workflow was different: iterate on the architecture and training loop quickly, validate with a tight benchmark, keep only the changes that move the curve. That speed changes what is feasible.</p>
+
+<p>There is a trade-off, though. Delegating implementation to a coding agent reduces friction, but it also reduces direct contact with every line of code. That loss of “full manual control” is not free: it can hide bugs, bake in unexamined assumptions, and make it easier to mistake artifacts for progress. The right posture is to embrace the speed while staying disciplined about verification.</p>
+
+<p>I initially planned to end with a short, paper-like write-up, but the results were promising enough to justify a more complete treatment. Instead, I’m turning this into a proper article: cleaner experimental design, stronger baselines, and a thorough set of benchmarks and ablations to pinpoint what actually drives the gains. More soon.</p>
 
 <d-bibliography></d-bibliography>
 
