@@ -294,21 +294,7 @@ We’ll find out.</p>
   <li>Prism (LLM-assisted LaTeX projects) for the final report formatting.</li>
 </ul>
 
-<p>I’ll split the project into explicit stages:</p>
-
-<p>1) Literature scan and baseline selection</p>
-
-<p>2) Where current neural approaches struggle on QAP (and why)</p>
-
-<p>3) Method proposal (model + training/inference recipe)</p>
-
-<p>4) Implementation plan and coding</p>
-
-<p>5) Experiments + evaluation protocol</p>
-
-<p>6) Results, ablations, and failure modes</p>
-
-<p>7) Write-up</p>
+<p>Let’s start.</p>
 
 <hr>
 
@@ -471,13 +457,11 @@ My point is to explore something <strong>algorithmic</strong>: a representation 
   <li>representation of (F, D, permutation/incumbent),</li>
   <li>inference/search procedure,</li>
   <li>learning pipeline/objective aligned with QAP structure.</li>
+  <li>Focus on these two papers: <d-cite key="tan2024sawt_qap"></d-cite>
+</li>
 </ul>
 
-<p>For each item give:</p>
-<ul>
-  <li>Failure mode → Fix → Minimal experiment (dataset/baseline/metric/budget).
-&lt;/i&gt;</li>
-</ul>
+<p>&lt;/i&gt;</p>
 
 <p><strong>A.</strong> It came with a bunch of interesting gaps, here the most interesting ones in my opinion:</p>
 
@@ -494,15 +478,12 @@ My point is to explore something <strong>algorithmic</strong>: a representation 
   <li>
     <p><strong>Sparse/ambiguous reward in learn-to-improve RL.</strong> Treating non-improving steps as “zero signal” (and not explicitly penalizing worsening moves) makes plateaus look identical and wastes steps under tight budgets.</p>
   </li>
+</ul>
+
+<p>I had some additional gaps in my mind, which the LLM did not mention:</p>
+<ul>
   <li>
-    <p><strong>Initializer training is decoupled from downstream search.</strong> Models trained to output a “good” permutation often optimize a surrogate objective, while actual performance comes from a later tabu/local-search stage—so learning is misaligned with what’s deployed.</p>
-  </li>
-  <li>
-    <p><strong>Entropic/Sinkhorn inner solvers are local-optimum prone.</strong> Differentiable relaxation methods can get stuck; quality becomes heavily dependent on stochastic multi-start, increasing variance and compute.</p>
-  </li>
-  <li>
-    <p><strong>Soft training vs hard rounding mismatch.</strong> Training optimizes a continuous doubly-stochastic solution, but evaluation uses a discrete permutation after Hungarian rounding; small changes in the soft matrix can cause large discrete jumps, misaligning the optimized loss with the measured objective.</p>
-  </li>
+<strong>Current neural approaches where implemented for the euclidean QAP</strong>. Methods that take coordinates (as done in euclidean TSP implementations), to measure distances. However, they are limited to instances in which distances are euclidean (computed from euclidean coordinates).</li>
 </ul>
 
 <hr>
