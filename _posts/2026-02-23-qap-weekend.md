@@ -266,6 +266,11 @@ Finally the learning: supervised? RL? unsupervised?
 
 ## Stage 5: Experiments and Evaluation Protocol
 
+Train with instances of size 5, generalize to sizes, 5, 10, 15, 20
+
+Compare to two baselines (trained with instances of size 20), greedy construction, and local search.
+
+![Alt text describing the figure](/assets/img/anytime_euclid_panel.png)
 
 ---
 
