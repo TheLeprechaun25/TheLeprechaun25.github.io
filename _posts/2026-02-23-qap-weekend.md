@@ -139,21 +139,7 @@ I’ll use the following tools:
 - Codex (gpt-5.3-codex) for coding iterations and refinements.
 - Prism (LLM-assisted LaTeX projects) for the final report formatting.
 
-I’ll split the project into explicit stages:
-
-1) Literature scan and baseline selection
-
-2) Where current neural approaches struggle on QAP (and why)
-
-3) Method proposal (model + training/inference recipe)
-
-4) Implementation plan and coding
-
-5) Experiments + evaluation protocol
-
-6) Results, ablations, and failure modes
-
-7) Write-up
+Let's start.
 
 ---
 
@@ -236,9 +222,8 @@ You can propose ideas like:
 - representation of (F, D, permutation/incumbent),
 - inference/search procedure,
 - learning pipeline/objective aligned with QAP structure.
+- Focus on these two papers: <d-cite key="tan2024sawt_qap"></d-cite>
 
-For each item give:
-- Failure mode → Fix → Minimal experiment (dataset/baseline/metric/budget).
 </i>
 
 **A.** It came with a bunch of interesting gaps, here the most interesting ones in my opinion:
@@ -251,16 +236,16 @@ For each item give:
 
 - **Sparse/ambiguous reward in learn-to-improve RL.** Treating non-improving steps as “zero signal” (and not explicitly penalizing worsening moves) makes plateaus look identical and wastes steps under tight budgets.
 
-- **Initializer training is decoupled from downstream search.** Models trained to output a “good” permutation often optimize a surrogate objective, while actual performance comes from a later tabu/local-search stage—so learning is misaligned with what’s deployed.
-
-- **Entropic/Sinkhorn inner solvers are local-optimum prone.** Differentiable relaxation methods can get stuck; quality becomes heavily dependent on stochastic multi-start, increasing variance and compute.
-
-- **Soft training vs hard rounding mismatch.** Training optimizes a continuous doubly-stochastic solution, but evaluation uses a discrete permutation after Hungarian rounding; small changes in the soft matrix can cause large discrete jumps, misaligning the optimized loss with the measured objective.
+I had some additional gaps in my mind, which the LLM did not mention:
+- **Current neural approaches where implemented for the euclidean QAP**. Methods that take coordinates (as done in euclidean TSP implementations), to measure distances. However, they are limited to instances in which distances are euclidean (computed from euclidean coordinates).
 
 ---
 
 
 ## Stage 3: The Proposal: Architecture and Training/Inference Recipe
+
+
+
 
 Talk about how we will first code the benchmark: in distribution performance (syhthetic instances), generalization to larger sizes and to QAPLIB, computational cost of training and inference.
 
