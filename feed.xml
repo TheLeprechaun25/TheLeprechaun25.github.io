@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="https://theleprechaun25.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://theleprechaun25.github.io/" rel="alternate" type="text/html" hreflang="en" /><updated>2026-02-28T21:05:50+00:00</updated><id>https://theleprechaun25.github.io/feed.xml</id><title type="html">Andoni Irazusta Garmendia</title><subtitle>Personal Page of Andoni Irazusta Garmendia.
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="https://theleprechaun25.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://theleprechaun25.github.io/" rel="alternate" type="text/html" hreflang="en" /><updated>2026-02-28T21:15:26+00:00</updated><id>https://theleprechaun25.github.io/feed.xml</id><title type="html">Andoni Irazusta Garmendia</title><subtitle>Personal Page of Andoni Irazusta Garmendia.
 </subtitle><entry><title type="html">Can a Weekend + LLMs Produce a New Neural Solver for the Quadratic Assignment Problem?</title><link href="https://theleprechaun25.github.io/blog/2026/qap-weekend/" rel="alternate" type="text/html" title="Can a Weekend + LLMs Produce a New Neural Solver for the Quadratic Assignment Problem?" /><published>2026-02-23T00:00:00+00:00</published><updated>2026-02-23T00:00:00+00:00</updated><id>https://theleprechaun25.github.io/blog/2026/qap-weekend</id><content type="html" xml:base="https://theleprechaun25.github.io/blog/2026/qap-weekend/"><![CDATA[<h2 id="motivation">Motivation</h2>
 
 <p>LLMs have gotten surprisingly competent at the core task of research projects: reading papers, writing code, and turning messy thoughts into structured text. 
@@ -88,86 +88,51 @@ It’s been a while, so I simply asked the LLM for a quick refresh.</p>
   <table>
     <thead>
       <tr>
-        <th>Paper / year</th>
-        <th>Method family</th>
-        <th>Core modeling choice</th>
-        <th>Training paradigm and loss</th>
-        <th>Data / benchmark</th>
-        <th>Sizes reported</th>
-        <th>Performance vs baselines (as reported)</th>
-        <th>Key limitations (as reported/visible)</th>
+        <th>Paper / year (real title)</th>
+        <th>Cite</th>
+        <th>Short description</th>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <td>Revised note on learning QAP with GNNs (2018) <d-cite key="nowak2018revised_qap_gnn"></d-cite></td>
-        <td>Supervised learning + GNN</td>
-        <td>Siamese GNN embeddings; outer product to score matches; row/col softmax to approximate permutation</td>
-        <td>Supervised planted-solution training; cross-entropy on recovered permutation</td>
-        <td>Synthetic Erdős–Rényi / random regular graph alignment</td>
-        <td>Example: $n=50$</td>
-        <td>High recovery rates across noise in tested regimes; outperforms some relaxation baselines on random regular graphs in their experiments</td>
-        <td>Focused on planted/random-graph regimes; not a direct QAPLIB facility-layout evaluation; requires supervised targets from the generator</td>
+        <td><strong>Revised Note on Learning Algorithms for Quadratic Assignment with Graph Neural Networks</strong> (2018)</td>
+        <td><d-cite key="nowak2018revised_qap_gnn"></d-cite></td>
+        <td>Supervised GNN method trained on synthetic/planted regimes to learn QAP-like assignment behavior (primarily studied outside “full” QAPLIB facility-layout evaluation).</td>
       </tr>
       <tr>
-        <td>Neural graph matching network for Lawler QAP (2019; TPAMI 2022) <d-cite key="wang2019ngm_lawler_qap,wang2022ngm_tpami"></d-cite></td>
-        <td>GNN solver + differentiable projection</td>
-        <td>Association graph embedding (can be $O(n^2)$ nodes); projection to a doubly-stochastic solution; sampling to explore feasible space</td>
-        <td>Supervised (cross-entropy) for labeled matching; unsupervised objective-driven training for QAPLIB setting</td>
-        <td>QAPLIB + vision graph matching benchmarks (in the same pipeline)</td>
-        <td>QAPLIB sizes up to 256 mentioned; excludes the hardest tai256c due to memory burden</td>
-        <td>Reports best-performing counts on QAPLIB (e.g., best on 72/133 instances with heavy sampling in their table)</td>
-        <td>Association-graph scaling and memory bottlenecks; evaluation uses normalized scoring rather than uniform optimality-gap reporting</td>
+        <td><strong>Neural Graph Matching Network: Learning Lawler’s Quadratic Assignment Problem With Extension to Hypergraph and Multiple-Graph Matching</strong> (2019; TPAMI 2022)</td>
+        <td><d-cite key="wang2019ngm_lawler_qap,wang2022ngm_tpami"></d-cite></td>
+        <td>Association-graph neural matching + Sinkhorn projection to predict permutations for Lawler-QAP / graph matching; extends to hypergraph and multi-graph matching settings.</td>
       </tr>
       <tr>
-        <td>Deep RL for QAP with double pointer network (2023) <d-cite key="bagga2023drl_qap_double_pointer"></d-cite></td>
-        <td>RL (constructive)</td>
-        <td>Alternating pointer decoding over locations/facilities with GRUs + attention; location encoding + facility GCN embeds</td>
-        <td>Actor–critic training; evaluated as % gap vs a swap heuristic baseline</td>
-        <td>Synthetic symmetric Koopmans–Beckmann instances with Euclidean locations</td>
-        <td>$n=10,20$</td>
-        <td>Average gap ~7–9% vs swap heuristic; faster than a time-limited MILP solver in their setup</td>
-        <td>Small sizes only; comparison target is a heuristic baseline; unclear scaling to $n\ge 50$</td>
+        <td><strong>Solving the Quadratic Assignment Problem using Deep Reinforcement Learning</strong> (2023)</td>
+        <td><d-cite key="bagga2023drl_qap_double_pointer"></d-cite></td>
+        <td>Constructive RL for Koopmans–Beckmann QAP using an alternating “double pointer” style policy over facilities/locations, trained with actor–critic.</td>
       </tr>
       <tr>
-        <td>Solution-aware transformer learn-to-improve (ICML 2024) <d-cite key="tan2024sawt_qap"></d-cite></td>
-        <td>RL (learn-to-improve) + attention</td>
-        <td>Separate facility/location encoding; “solution-aware” attention uses incumbent-dependent matrix; proposes swap actions</td>
-        <td>Policy-gradient with value baseline + entropy; reward tied to improvement vs best-so-far</td>
-        <td>Synthetic QAP10/20/50/100 + QAPLIB generalization</td>
-        <td>Up to $n=100$ synthetic; QAPLIB includes up to $n=256$</td>
-        <td>Synthetic: near-zero gaps at higher search steps; QAPLIB: mean gap reported as 26.8% with per-instance time ~12.11s</td>
-        <td>Large distribution shift across QAPLIB categories; needs better cross-category generalization</td>
+        <td><strong>Learning Solution-Aware Transformers for Efficiently Solving Quadratic Assignment Problem</strong> (ICML 2024)</td>
+        <td><d-cite key="tan2024sawt_qap"></d-cite></td>
+        <td>Learn-to-improve transformer that conditions on the incumbent assignment (“solution-aware”) and outputs swap-style improvement actions; evaluated on synthetic KB-QAP and QAPLIB generalization.</td>
       </tr>
       <tr>
-        <td>Unsupervised learning for QAP as tabu-search initialization (2025) <d-cite key="min2025ul_qap_plume"></d-cite></td>
-        <td>Unsupervised + hybrid heuristic</td>
-        <td>Permutation-equivariant network outputs logits; entropic relaxation gives soft permutation; discretize then tabu search</td>
-        <td>Unsupervised objective; no solved-instance labels; evaluated by tabu-search improvement</td>
-        <td>Synthetic instances across sizes/densities</td>
-        <td>$n=100,200$</td>
-        <td>Improves over random initialization and improves downstream tabu-search final cost under multiple budgets</td>
-        <td>Gains after strong tabu can be modest; trained per regime; not benchmarked on QAPLIB</td>
+        <td><strong>Unsupervised Learning for Quadratic Assignment</strong> (2025)</td>
+        <td><d-cite key="min2025ul_qap_plume"></d-cite></td>
+        <td>Unsupervised permutation learning (no solved targets) to generate strong initial solutions that are refined by tabu search; studies instance-regime and size variation.</td>
       </tr>
       <tr>
-        <td>Bi-level differentiable framework (2025) <d-cite key="shi2025biqap"></d-cite></td>
-        <td>Differentiable relaxation + bi-level</td>
-        <td>Network modifies an instance; inner solver uses entropic relaxation + iterative normalization; discretize</td>
-        <td>Bi-level training: outer loss is original QAP objective; inner solved via differentiable layer; multi-sampling</td>
-        <td>Case studies incl. QAPLIB + large synthetic</td>
-        <td>Reports up to sizes like 500–1000 in a “large random dataset”</td>
-        <td>QAPLIB: best on 92/134 instances; strong on many instances vs a lifted-relaxation baseline</td>
-        <td>Normalized scoring + per-category training; cross-category transfer and consistent gap reporting unclear</td>
+        <td><strong>BiQAP: Neural Bi-level Optimization-based Framework for Solving Quadratic Assignment Problems</strong> (KDD 2025)</td>
+        <td><d-cite key="shi2025biqap"></d-cite></td>
+        <td>Bi-level framework where a network guides a differentiable entropic relaxation (inner solver) while optimizing the original QAP objective at the outer level.</td>
       </tr>
       <tr>
-        <td>Warm-started MCMC finetuning + cross-graph attention (OpenReview 2026) <d-cite key="pan2026plma_qap_mcmc"></d-cite></td>
-        <td>Learning-to-optimize + hybrid search</td>
-        <td>Cross-graph attention heatmap; additive energy model enables fast 2-swap proposal scoring; warm-start refinement</td>
-        <td>Pretrain then inference-time adaptation; evaluates runtime–gap tradeoffs</td>
-        <td>Synthetic + QAPLIB + Taixxeyy</td>
-        <td>Synthetic up to at least $n=500$</td>
-        <td>QAPLIB: avg gap ~0.10% with faster time than a strong tabu baseline (as reported)</td>
-        <td>Sensitive to inference-time budget + time accounting; depends on reference-solution definitions</td>
+        <td><strong>Learning the Quadratic Assignment Problem with Warm-Started MCMC Finetuning and Cross-Graph Attention</strong> (ICLR 2026 submission)</td>
+        <td><d-cite key="pan2026plma_qap_mcmc"></d-cite></td>
+        <td>Cross-graph attention + warm-started MCMC finetuning/adaptation at inference time; energy-based formulation for efficient swap proposals and runtime–quality tradeoffs.</td>
+      </tr>
+      <tr>
+        <td><strong>Revocable Deep Reinforcement Learning with Affinity Regularization for Outlier-Robust Graph Matching</strong> (ICLR 2023)</td>
+        <td><d-cite key="liu2023rgm_affinity"></d-cite></td>
+        <td>RL-based solver for Lawler-QAP/graph matching with outliers; uses revocable decisions and affinity regularization to improve robustness to unmatched nodes.</td>
       </tr>
     </tbody>
   </table>
@@ -208,9 +173,6 @@ My point is to explore something <strong>algorithmic</strong>: a representation 
 <ul>
   <li>
     <p><strong>Association-graph materialization blows up memory.</strong> Methods that build the full association graph quickly hit GPU-memory limits as $n$ grows, making large QAPLIB instances impractical.</p>
-  </li>
-  <li>
-    <p><strong>2-swap-only neighborhoods dominate inference.</strong> Many pipelines rely almost exclusively on facility–facility swaps, which mixes slowly when good improvements require coordinated multi-facility reassignment.</p>
   </li>
   <li>
     <p><strong>Additive scoring/energy misses quadratic coupling.</strong> Surrogates that score assignments as $\sum_i \phi_{i,\pi(i)}$ cannot represent the true quadratic interactions, biasing move ranking and exploration, especially on dense instances.</p>
