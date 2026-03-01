@@ -236,14 +236,7 @@ My point is to explore something **algorithmic**: a representation choice, an in
 
 So I asked the LLM again:
 
-<b>Q.</b> <i>Ignore generic “future work” (scale, more benchmarks, theory). Based on existing neural QAP methods, list 5–8 specific, mechanism-level gaps and a concrete improvement for each.
-
-You can propose ideas like:
-- representation of (F, D, permutation/incumbent),
-- inference/search procedure,
-- learning pipeline/objective aligned with QAP structure.
-
-</i>
+<b>Q.</b> *Ignore generic “future work” (scale, more benchmarks, theory). Based on existing neural QAP methods, list 5–8 specific, mechanism-level gaps and a concrete improvement for each.*
 
 **A.** It came with a bunch of interesting gaps, here the most interesting ones in my opinion:
 
@@ -276,11 +269,11 @@ The first neural baseline is deliberately simple: a **swap-based neural improvem
 The main design question then became: *what inductive bias should the policy have to pick good swaps reliably?*  
 Instead of trying to design the final model in one shot, I iterated quickly with a coding agent: propose a modification, implement, train a short run, keep the changes that improve the validation curve.
 
-Below is a compact log of the most informative iterations (validation on 100 instances, sequential init, $4N$ steps).
+Below is a compact log of the most informative iterations (validation on 100 instances of size $n=5$, reporting the best gap to optimal % after 20 steps).
 
 ---
 
-### Iteration log (what changed, and why)
+### Iteration log
 
 #### 1) Baseline swap policy (trained on $n=5$)
 **Result (gap to optimal @ $n=5$):** 1.8522%  
@@ -345,7 +338,7 @@ Then decode swaps with a **pair-state module** (PairWL): an approximate 2-WL-sty
 - strengthen the token feedback pathway (optionally top-$k$ pooling).  
 **Why it helped:** pushes the pair module closer to swap-delta reasoning, where triadic context is filtered by instance- and solution-dependent cues.
 
-To summarize the effect of these design iterations, the next Figure shows the validation gap (on $n=5$) after each architecture update.
+To summarize the effect of these design iterations, the next Figure shows the best validation gap found on 20 steps (on $n=5$) after each architecture update.
 
 <p style="text-align:center;">
   <img src="/assets/img/qap_llm_gap_vs_iteration.png" alt="Alt text" style="width:80%; max-width:900px;">
