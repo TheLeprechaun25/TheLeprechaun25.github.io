@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="https://theleprechaun25.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://theleprechaun25.github.io/" rel="alternate" type="text/html" hreflang="en" /><updated>2026-03-01T07:12:31+00:00</updated><id>https://theleprechaun25.github.io/feed.xml</id><title type="html">Andoni Irazusta Garmendia</title><subtitle>Personal Page of Andoni Irazusta Garmendia.
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="https://theleprechaun25.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://theleprechaun25.github.io/" rel="alternate" type="text/html" hreflang="en" /><updated>2026-03-01T08:26:47+00:00</updated><id>https://theleprechaun25.github.io/feed.xml</id><title type="html">Andoni Irazusta Garmendia</title><subtitle>Personal Page of Andoni Irazusta Garmendia.
 </subtitle><entry><title type="html">Can a Weekend + LLMs Produce a New Neural Solver for the Quadratic Assignment Problem?</title><link href="https://theleprechaun25.github.io/blog/2026/qap-weekend/" rel="alternate" type="text/html" title="Can a Weekend + LLMs Produce a New Neural Solver for the Quadratic Assignment Problem?" /><published>2026-02-23T00:00:00+00:00</published><updated>2026-02-23T00:00:00+00:00</updated><id>https://theleprechaun25.github.io/blog/2026/qap-weekend</id><content type="html" xml:base="https://theleprechaun25.github.io/blog/2026/qap-weekend/"><![CDATA[<h2 id="motivation">Motivation</h2>
 
 <p>LLMs have gotten surprisingly competent at the core task of research projects: reading papers, writing code, and turning messy thoughts into structured text. 
@@ -201,16 +201,7 @@ My point is to explore something <strong>algorithmic</strong>: a representation 
 
 <p>So I asked the LLM again:</p>
 
-<p><b>Q.</b> <i>Ignore generic “future work” (scale, more benchmarks, theory). Based on existing neural QAP methods, list 5–8 specific, mechanism-level gaps and a concrete improvement for each.</i></p>
-
-<p>You can propose ideas like:</p>
-<ul>
-  <li>representation of (F, D, permutation/incumbent),</li>
-  <li>inference/search procedure,</li>
-  <li>learning pipeline/objective aligned with QAP structure.</li>
-</ul>
-
-<p>&lt;/i&gt;</p>
+<p><b>Q.</b> <em>Ignore generic “future work” (scale, more benchmarks, theory). Based on existing neural QAP methods, list 5–8 specific, mechanism-level gaps and a concrete improvement for each.</em></p>
 
 <p><strong>A.</strong> It came with a bunch of interesting gaps, here the most interesting ones in my opinion:</p>
 
@@ -252,11 +243,11 @@ My point is to explore something <strong>algorithmic</strong>: a representation 
 <p>The main design question then became: <em>what inductive bias should the policy have to pick good swaps reliably?</em><br />
 Instead of trying to design the final model in one shot, I iterated quickly with a coding agent: propose a modification, implement, train a short run, keep the changes that improve the validation curve.</p>
 
-<p>Below is a compact log of the most informative iterations (validation on 100 instances, sequential init, $4N$ steps).</p>
+<p>Below is a compact log of the most informative iterations (validation on 100 instances of size $n=5$, reporting the best gap to optimal % after 20 steps).</p>
 
 <hr />
 
-<h3 id="iteration-log-what-changed-and-why">Iteration log (what changed, and why)</h3>
+<h3 id="iteration-log">Iteration log</h3>
 
 <h4 id="1-baseline-swap-policy-trained-on-n5">1) Baseline swap policy (trained on $n=5$)</h4>
 <p><strong>Result (gap to optimal @ $n=5$):</strong> 1.8522%<br />
@@ -333,7 +324,7 @@ Then decode swaps with a <strong>pair-state module</strong> (PairWL): an approxi
 <strong>Why it helped:</strong> pushes the pair module closer to swap-delta reasoning, where triadic context is filtered by instance- and solution-dependent cues.</li>
 </ul>
 
-<p>To summarize the effect of these design iterations, the next Figure shows the validation gap (on $n=5$) after each architecture update.</p>
+<p>To summarize the effect of these design iterations, the next Figure shows the best validation gap found on 20 steps (on $n=5$) after each architecture update.</p>
 
 <p style="text-align:center;">
   <img src="/assets/img/qap_llm_gap_vs_iteration.png" alt="Alt text" style="width:80%; max-width:900px;" />
